@@ -763,18 +763,7 @@ export default function HostDetailsForm(): React.JSX.Element {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Navigation */}
-      <nav className="bg-blue-600 text-white px-6 py-6">
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-8">
-            <button className="hover:text-blue-200 transition-colors">Dashboard</button>
-            <button className="hover:text-blue-200 transition-colors">Clients</button>
-            <button className="hover:text-blue-200 transition-colors">Invoices</button>
-            <button className="hover:text-blue-200 transition-colors">Property Details</button>
-            <button className="hover:text-blue-200 transition-colors">Reservation Details</button>
-            <button className="hover:text-blue-200 transition-colors">Reports</button>
-          </div>
-        </div>
-      </nav>
+     
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-8">

@@ -1,31 +1,23 @@
-
-
-
-
-
-
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import HostForm from './components/forms/HostForm';
 import HostList from './pages/HostLast'
+import Layout from './Layout';
 
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Sidebar layout with nested routes */}
-        {/* 
+        
         <Route path="/" element={<Layout />}>
-          <Route path="UserManagement" element={<UserManagement />} />
-          <Route path="PaymentsBilling" element={<PaymentsBilling />} />
-          <Route path="Home" element={<Homeview />} />
-        </Route> 
-        */}
-
-        {/* Direct route to HostForm */}
-
+         
         <Route path="/HostForm" element={<HostForm />} />
         <Route path="/HostList" element={<HostList />} />
+        </Route> 
+        
+
+        
+
       </Routes>
     </BrowserRouter>
   );
