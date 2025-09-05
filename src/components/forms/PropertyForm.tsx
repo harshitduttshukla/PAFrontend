@@ -265,22 +265,7 @@ const PropertyForm: React.FC = () => {
 
           {/* First Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-600 mb-2">PROPERTY STATUS</label>
-              <select 
-                value={formData.propertyStatus}
-                onChange={(e) => handleInputChange('propertyStatus', e.target.value)}
-                // repatie this css multpile time 
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-all duration-300 bg-white"
-              >
-                <option value="">Select Property Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="maintenance">Under Maintenance</option>
-                <option value="booked">Booked</option>
-              </select>
-            </div> */}
-
+           
              <FormSelect
               label="PROPERTY STATUS"
               value={formData.propertyStatus}
@@ -306,7 +291,7 @@ const PropertyForm: React.FC = () => {
                 ))}
               </select>
 
-              {/* Host Information Panel */}
+              
               {showHostInfo && selectedHost && hostData[selectedHost] && (
                 <div className="mt-4 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-lg animate-in slide-in-from-top-2 duration-300">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -339,24 +324,9 @@ const PropertyForm: React.FC = () => {
 
           </div>
 
-          {/* Location Details */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            {/* <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-600 mb-2">PIN CODE</label>
-              <select 
-                value={formData.pinCode}
-                onChange={(e) => handlePinCodeChange(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-all duration-300 bg-white"
-              >
-                <option value="">Select Pin Code</option>
-                <option value="110001">110001 - New Delhi</option>
-                <option value="400001">400001 - Mumbai</option>
-                <option value="560001">560001 - Bangalore</option>
-                <option value="600001">600001 - Chennai</option>
-                <option value="700001">700001 - Kolkata</option>
-              </select>
-            </div> */}
-
+            
              <FormSelect
               label="PIN CODE"
               value={formData.pinCode}
@@ -405,7 +375,7 @@ const PropertyForm: React.FC = () => {
           </div>
 
 
-          {/* Property and Contact Details */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             
                 <FormSelect
