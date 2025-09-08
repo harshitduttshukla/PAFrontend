@@ -1,6 +1,7 @@
 
 export interface HostData {
   host_name: string;
+  host_owner_name: string; 
   host_pan_number: string;
   rating: string;
   host_email: string;
