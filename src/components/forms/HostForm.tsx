@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 import { z } from 'zod';
+import { HostData } from "../../types/host";
 
 // TypeScript interfaces
-interface HostData {
-  host_name: string;
-  host_pan_number: string;
-  rating: string;
-  host_email: string;
-  host_gst_numbers: string[];
-  host_contact_number: string;
-}
+
 
 interface ValidationErrors {
   [key: string]: string;
@@ -49,7 +43,7 @@ export default function HostDetailsForm(): React.JSX.Element {
     host_pan_number: '',
     rating: '',
     host_email: '',
-    host_gst_numbers: [''], // Changed to array with single empty string
+    host_gst_numbers: [''], 
     host_contact_number: ''
   });
 

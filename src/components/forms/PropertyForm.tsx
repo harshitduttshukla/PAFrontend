@@ -1,27 +1,36 @@
-import React, { useState } from 'react';
-import { X, Check } from 'lucide-react';
-import FormInput from '../../ui/FormInput';
-import FormSelect from '../../ui/FormSelect';
-import FormTextarea from '../../ui/FormTextarea';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Check, Search } from 'lucide-react';
+import FormInput from "../../ui/FormInput"
+import FormSelect from "../../ui/FormSelect"
+import FormTextarea from "../../ui/FormTextarea"
 
+
+// Types
 interface HostData {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  joinDate: string;
-  properties: string;
-  rating: string;
-  status: 'Active' | 'Inactive';
-  lastLogin: string;
+  host_id: number;
+  host_name: string;
+  host_pan_number?: string;
+  rating?: number;
+  host_email: string;
+  host_contact_number: string;
+  created_at?: string;
+}
+
+interface PincodeData {
+  pincode_id: number;
+  pincode: string;
+  city?: string;
+  state?: string;
+  district?: string;
 }
 
 interface PropertyFormData {
   propertyStatus: string;
+  hostId: number | null;
   hostName: string;
   ivrNumber: string;
+  pincodeId: number | null;
   pinCode: string;
-  manualPinCode: string;
   city: string;
   location: string;
   postId: string;
@@ -45,17 +54,124 @@ interface PropertyFormData {
   propertyUrl: string;
 }
 
-const PropertyForm: React.FC = () => {
-  
-  const [selectedHost, setSelectedHost] = useState<string>('');
-  const [showHostInfo, setShowHostInfo] = useState<boolean>(false);
+// Reusable Search Input Component
+interface SearchInputProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onSelect: (item: any) => void;
+  searchResults: any[];
+  isLoading: boolean;
+  placeholder: string;
+  displayKey: string;
+  noResultsText: string;
+  selectedInfo?: React.ReactNode;
+}
 
+const SearchInput: React.FC<SearchInputProps> = ({
+  label,
+  value,
+  onChange,
+  onSelect,
+  searchResults,
+  isLoading,
+  placeholder,
+  displayKey,
+  noResultsText,
+  selectedInfo
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    onChange(inputValue);
+    setIsOpen(inputValue.length > 0);
+  };
+
+  const handleSelect = (item: any) => {
+    onSelect(item);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="flex flex-col relative" ref={dropdownRef}>
+      <label className="text-sm font-medium text-gray-600 mb-2">{label}</label>
+      <div className="relative">
+        <input
+          type="text"
+          value={value}
+          onChange={handleInputChange}
+          onFocus={() => value.length > 0 && setIsOpen(true)}
+          placeholder={placeholder}
+          className="w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-all duration-300"
+        />
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          {isLoading ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+          ) : (
+            <Search className="w-4 h-4 text-gray-400" />
+          )}
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+          {searchResults.length > 0 ? (
+            searchResults.map((item, index) => (
+              <div
+                key={item[displayKey === 'host_name' ? 'host_id' : 'pincode_id'] || index}
+                onClick={() => handleSelect(item)}
+                className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+              >
+                <div className="font-medium text-gray-800">
+                  {displayKey === 'host_name' ? item.host_name : `${item.pincode}${item.city ? ` - ${item.city}` : ''}`}
+                </div>
+                {displayKey === 'host_name' && (
+                  <div className="text-sm text-gray-500 mt-1">
+                    {item.host_email} • {item.host_contact_number}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : value.length > 0 && !isLoading ? (
+            <div className="px-4 py-3 text-gray-500 text-center">{noResultsText}</div>
+          ) : null}
+        </div>
+      )}
+
+      {selectedInfo && (
+        <div className="mt-4">
+          {selectedInfo}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+
+
+const PropertyForm: React.FC = () => {
   const [formData, setFormData] = useState<PropertyFormData>({
     propertyStatus: '',
+    hostId: null,
     hostName: '',
     ivrNumber: '',
+    pincodeId: null,
     pinCode: '',
-    manualPinCode: '',
     city: '',
     location: '',
     postId: '',
@@ -79,64 +195,92 @@ const PropertyForm: React.FC = () => {
     propertyUrl: ''
   });
 
-  const hostData: Record<string, HostData> = {
-    'john_doe': {
-      name: 'John Doe',
-      email: 'john.doe@email.com',
-      phone: '+1-555-0123',
-      address: '123 Main St, New York, NY',
-      joinDate: '2023-01-15',
-      properties: '5',
-      rating: '4.8/5',
-      status: 'Active',
-      lastLogin: '2024-01-15 09:30 AM'
-    },
-    'jane_smith': {
-      name: 'Jane Smith',
-      email: 'jane.smith@email.com',
-      phone: '+1-555-0124',
-      address: '456 Oak Ave, Los Angeles, CA',
-      joinDate: '2023-03-22',
-      properties: '3',
-      rating: '4.6/5',
-      status: 'Active',
-      lastLogin: '2024-01-14 02:15 PM'
-    },
-    'mike_johnson': {
-      name: 'Mike Johnson',
-      email: 'mike.johnson@email.com',
-      phone: '+1-555-0125',
-      address: '789 Pine Rd, Chicago, IL',
-      joinDate: '2023-02-10',
-      properties: '7',
-      rating: '4.9/5',
-      status: 'Active',
-      lastLogin: '2024-01-13 11:45 AM'
-    },
-    'sarah_wilson': {
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@email.com',
-      phone: '+1-555-0126',
-      address: '321 Elm St, Miami, FL',
-      joinDate: '2023-05-18',
-      properties: '2',
-      rating: '4.4/5',
-      status: 'Active',
-      lastLogin: '2024-01-12 07:20 PM'
-    },
-    'david_brown': {
-      name: 'David Brown',
-      email: 'david.brown@email.com',
-      phone: '+1-555-0127',
-      address: '654 Maple Dr, Seattle, WA',
-      joinDate: '2023-04-05',
-      properties: '4',
-      rating: '4.7/5',
-      status: 'Inactive',
-      lastLogin: '2024-01-10 03:45 PM'
+  // Search states
+  const [hostSearchTerm, setHostSearchTerm] = useState('');
+  const [hostSearchResults, setHostSearchResults] = useState<HostData[]>([]);
+  const [isHostLoading, setIsHostLoading] = useState(false);
+  const [selectedHost, setSelectedHost] = useState<HostData | null>(null);
+
+  const [pincodeSearchTerm, setPincodeSearchTerm] = useState('');
+  const [pincodeSearchResults, setPincodeSearchResults] = useState<PincodeData[]>([]);
+  const [isPincodeLoading, setIsPincodeLoading] = useState(false);
+  const [selectedPincode, setSelectedPincode] = useState<PincodeData | null>(null);
+
+  // Debounce hook
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  };
+
+  const debouncedHostSearch = useDebounce(hostSearchTerm, 300);
+  const debouncedPincodeSearch = useDebounce(pincodeSearchTerm, 300);
+
+  // API call functions
+  const searchHosts = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setHostSearchResults([]);
+      return;
+    }
+
+    setIsHostLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/host?hostname=${encodeURIComponent(searchTerm)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setHostSearchResults(Array.isArray(data) ? data : []);
+      } else {
+        setHostSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching hosts:', error);
+      setHostSearchResults([]);
+    } finally {
+      setIsHostLoading(false);
     }
   };
 
+  const searchPincodes = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setPincodeSearchResults([]);
+      return;
+    }
+
+    setIsPincodeLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/PinCode?pincode=${encodeURIComponent(searchTerm)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setPincodeSearchResults(Array.isArray(data) ? data : []);
+      } else {
+        setPincodeSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching pincodes:', error);
+      setPincodeSearchResults([]);
+    } finally {
+      setIsPincodeLoading(false);
+    }
+  };
+
+  // Search effects
+  useEffect(() => {
+    searchHosts(debouncedHostSearch);
+  }, [debouncedHostSearch]);
+
+  useEffect(() => {
+    searchPincodes(debouncedPincodeSearch);
+  }, [debouncedPincodeSearch]);
 
   const handleInputChange = (field: keyof PropertyFormData, value: string) => {
     setFormData(prev => ({
@@ -145,63 +289,125 @@ const PropertyForm: React.FC = () => {
     }));
   };
 
-  const handleHostSelection = (hostKey: string) => {
-    setSelectedHost(hostKey);
-    setFormData(prev => ({ ...prev, hostName: hostKey }));
-    
-    if (hostKey && hostData[hostKey]) {
-      const host = hostData[hostKey];
-      setFormData(prev => ({
-        ...prev,
-        contactPerson: host.name,
-        contactNumber: host.phone.replace('+1-', ''),
-        emailId: host.email
-      }));
-      setShowHostInfo(true);
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        contactPerson: '',
-        contactNumber: '',
-        emailId: ''
-      }));
-      setShowHostInfo(false);
-    }
+  const handleHostSelect = (host: HostData) => {
+    setSelectedHost(host);
+    setHostSearchTerm(host.host_name);
+    setFormData(prev => ({
+      ...prev,
+      hostId: host.host_id,
+      hostName: host.host_name,
+      contactPerson: host.host_name,
+      contactNumber: host.host_contact_number.replace('+1-', ''),
+      emailId: host.host_email
+    }));
   };
 
-  const handlePinCodeChange = (pinCode: string) => {
-    setFormData(prev => ({ ...prev, pinCode }));
-    
-    const pinOptions: Record<string, string> = {
-      '110001': 'New Delhi',
-      '400001': 'Mumbai',
-      '560001': 'Bangalore',
-      '600001': 'Chennai',
-      '700001': 'Kolkata'
+  const handlePincodeSelect = (pincode: PincodeData) => {
+    setSelectedPincode(pincode);
+    setPincodeSearchTerm(pincode.pincode);
+    setFormData(prev => ({
+      ...prev,
+      pincodeId: pincode.pincode_id,
+      pinCode: pincode.pincode,
+      city: pincode.city || ''
+    }));
+  };
+
+  // const handleSave = async () => {
+  //   try {
+  //     // Prepare data for API - send IDs instead of names
+  //     const propertyData = {
+  //       property_status: formData.propertyStatus,
+  //       host_id: formData.hostId,
+  //       ivr_number: formData.ivrNumber,
+  //       pincode_id: formData.pincodeId,
+  //       city: formData.city,
+  //       location: formData.location,
+  //       post_id: formData.postId,
+  //       property_type: formData.propertyType,
+  //       contact_person: formData.contactPerson,
+  //       contact_number: formData.contactNumber,
+  //       email_id: formData.emailId,
+  //       caretaker_name: formData.caretakerName,
+  //       caretaker_number: formData.caretakerNumber,
+  //       note: formData.note,
+  //       check_in_time: formData.checkInTime,
+  //       check_out_time: formData.checkOutTime,
+  //       master_bedroom: parseInt(formData.masterBedroom),
+  //       common_bedroom: parseInt(formData.commonBedroom),
+  //       landmark: formData.landmark,
+  //       address1: formData.address1,
+  //       address2: formData.address2,
+  //       address3: formData.address3,
+  //       thumbnail: formData.thumbnail,
+  //       property_url: formData.propertyUrl
+  //     };
+
+  //     const response = await fetch('http://localhost:5000/api/properties', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(propertyData)
+  //     });
+
+  //     if (response.ok) {
+  //       const result = await response.json();
+  //       alert('Property saved successfully!\n\nProperty ID: ' + result.property.property_id);
+  //       console.log('Saved property:', result);
+  //     } else {
+  //       const error = await response.json();
+  //       alert('Error saving property: ' + (error.error || 'Unknown error'));
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving property:', error);
+  //     alert('Error saving property. Please try again.');
+  //   }
+  // };
+
+  const handleSave = async () => {
+  try {
+    const propertyData = {
+      property_status: formData.propertyStatus,
+      host_id: formData.hostId,
+      pincode_id: formData.pincodeId
+      //  ✅ only include columns that exist in DB
     };
 
-    if (pinOptions[pinCode]) {
-      setFormData(prev => ({
-        ...prev,
-        city: pinOptions[pinCode],
-        manualPinCode: pinCode
-      }));
-    }
-  };
+    const response = await fetch("http://localhost:5000/api/properties", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(propertyData),
+    });
 
-  const handleSave = () => {
-    alert('Property saved successfully!\n\nData: ' + JSON.stringify(formData, null, 2));
-    console.log('Saved property data:', formData);
-  };
+    if (response.ok) {
+      const result = await response.json();
+      alert(
+        "Property saved successfully!\n\nProperty ID: " +
+          result.property.property_id
+      );
+      console.log("Saved property:", result);
+    } else {
+      const error = await response.json();
+      alert("Error saving property: " + (error.error || "Unknown error"));
+    }
+  } catch (error) {
+    console.error("Error saving property:", error);
+    alert("Error saving property. Please try again.");
+  }
+};
 
   const handleCancel = () => {
     if (window.confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
       setFormData({
         propertyStatus: '',
+        hostId: null,
         hostName: '',
         ivrNumber: '',
+        pincodeId: null,
         pinCode: '',
-        manualPinCode: '',
         city: '',
         location: '',
         postId: '',
@@ -224,17 +430,15 @@ const PropertyForm: React.FC = () => {
         thumbnail: '',
         propertyUrl: ''
       });
-      setSelectedHost('');
-      setShowHostInfo(false);
+      setSelectedHost(null);
+      setSelectedPincode(null);
+      setHostSearchTerm('');
+      setPincodeSearchTerm('');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
-      
-
-      {/* Main Container */}
       <div className="max-w-6xl mx-auto mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gray-50 px-6 py-5 border-b flex justify-between items-center">
@@ -265,8 +469,7 @@ const PropertyForm: React.FC = () => {
 
           {/* First Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-           
-             <FormSelect
+            <FormSelect
               label="PROPERTY STATUS"
               value={formData.propertyStatus}
               onChange={e => handleInputChange('propertyStatus', e.target.value)}
@@ -278,107 +481,95 @@ const PropertyForm: React.FC = () => {
               ]}
             />
 
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-600 mb-2">HOST NAME</label>
-              <select 
-                value={selectedHost}
-                onChange={(e) => handleHostSelection(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-all duration-300 bg-white"
-              >
-                <option value="">--Select Host Name--</option>
-                {Object.entries(hostData).map(([key, host]) => (
-                  <option key={key} value={key}>{host.name}</option>
-                ))}
-              </select>
-
-              
-              {showHostInfo && selectedHost && hostData[selectedHost] && (
-                <div className="mt-4 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-lg animate-in slide-in-from-top-2 duration-300">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Object.entries(hostData[selectedHost]).map(([key, value]) => (
-                      <div key={key} className="flex flex-col">
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </span>
-                        <span className={`text-sm font-medium ${
-                          key === 'status' 
-                            ? value === 'Active' ? 'text-green-600' : 'text-red-600'
-                            : 'text-gray-800'
-                        }`}>
-                          {value}
-                        </span>
+            <SearchInput
+              label="HOST NAME"
+              value={hostSearchTerm}
+              onChange={setHostSearchTerm}
+              onSelect={handleHostSelect}
+              searchResults={hostSearchResults}
+              isLoading={isHostLoading}
+              placeholder="Search for host..."
+              displayKey="host_name"
+              noResultsText="No hosts found"
+              selectedInfo={selectedHost && (
+                <div className="p-4 bg-gray-50 border-l-4 border-blue-500 rounded-lg">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Host ID</span>
+                      <p className="text-sm font-medium text-gray-800">{selectedHost.host_id}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Email</span>
+                      <p className="text-sm font-medium text-gray-800">{selectedHost.host_email}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Contact</span>
+                      <p className="text-sm font-medium text-gray-800">{selectedHost.host_contact_number}</p>
+                    </div>
+                    {selectedHost.rating && (
+                      <div>
+                        <span className="text-xs font-semibold text-gray-500 uppercase">Rating</span>
+                        <p className="text-sm font-medium text-gray-800">{selectedHost.rating}/5</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
-            </div>
-
-           
-            <FormInput
-            label="IVR"
-            value={formData.ivrNumber}
-            onChange={(e) => handleInputChange("ivrNumber", e.target.value)}
-            placeholder="Enter IVR Number"
             />
 
+            <FormInput
+              label="IVR"
+              value={formData.ivrNumber}
+              onChange={(e) => handleInputChange("ivrNumber", e.target.value)}
+              placeholder="Enter IVR Number"
+            />
           </div>
 
-          
+          {/* Second Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            
-             <FormSelect
+            <SearchInput
               label="PIN CODE"
-              value={formData.pinCode}
-              onChange={e => handlePinCodeChange(e.target.value)}
-              options={[
-                { value: '110001', label: '110001 - New Delhi' },
-                { value: '400001', label: '400001 - Mumbai' },
-                { value: '560001', label: '560001 - Bangalore' },
-                { value: '600001', label: '600001 - Chennai' },
-                { value: '700001', label: '700001 - Kolkata' }
-              ]}
+              value={pincodeSearchTerm}
+              onChange={setPincodeSearchTerm}
+              onSelect={handlePincodeSelect}
+              searchResults={pincodeSearchResults}
+              isLoading={isPincodeLoading}
+              placeholder="Search pincode..."
+              displayKey="pincode"
+              noResultsText="No pincodes found"
+              selectedInfo={selectedPincode && (
+                <div className="p-2 bg-blue-50 rounded text-sm">
+                  <strong>ID:</strong> {selectedPincode.pincode_id}
+                  {selectedPincode.city && <div><strong>City:</strong> {selectedPincode.city}</div>}
+                </div>
+              )}
             />
-            
 
             <FormInput
-                label="PIN CODE"
-                value={formData.manualPinCode}
-                onChange={(e) => handleInputChange("manualPinCode", e.target.value)}
-                placeholder="Enter Pin Code"
-                />
+              label="CITY"
+              value={formData.city}
+              onChange={(e) => handleInputChange("city", e.target.value)}
+              placeholder="Enter City"
+            />
 
             <FormInput
-                label="CITY"
-                value={formData.city}
-                onChange={(e) => handleInputChange("city", e.target.value)}
-                placeholder="Enter City"
+              label="LOCATION"
+              value={formData.location}
+              onChange={(e) => handleInputChange("location", e.target.value)}
+              placeholder="Enter Location"
             />
 
-
-           <FormInput
-                label="LOCATION"
-                value={formData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
-                placeholder="Enter Location"
-            />
-
-            
-
-             <FormInput
+            <FormInput
               label="POST ID"
               value={formData.postId}
               onChange={e => handleInputChange('postId', e.target.value)}
               placeholder="Enter Post ID"
             />
-          
           </div>
 
-
-          
+          {/* Third Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            
-                <FormSelect
+            <FormSelect
               label="PROPERTY TYPE"
               value={formData.propertyType}
               onChange={e => handleInputChange('propertyType', e.target.value)}
@@ -390,8 +581,6 @@ const PropertyForm: React.FC = () => {
                 { value: 'penthouse', label: 'Penthouse' }
               ]}
             />
-           
-
 
             <FormInput
               label="HOST NAME (Manual)"
@@ -400,16 +589,14 @@ const PropertyForm: React.FC = () => {
               placeholder="Enter Host Name"
             />
 
-           
-
-             <FormInput
+            <FormInput
               label="CONTACT PERSON"
               value={formData.contactPerson}
               onChange={e => handleInputChange('contactPerson', e.target.value)}
               placeholder="Enter Contact Person"
             />
 
-           <FormInput
+            <FormInput
               label="CONTACT NUMBER"
               type="tel"
               value={formData.contactNumber}
@@ -417,7 +604,7 @@ const PropertyForm: React.FC = () => {
               placeholder="Enter Contact Number"
             />
 
-             <FormInput
+            <FormInput
               label="EMAIL ID"
               type="email"
               value={formData.emailId}
@@ -428,20 +615,18 @@ const PropertyForm: React.FC = () => {
 
           {/* Caretaker and Additional Details */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-             <FormInput
+            <FormInput
               label="CARETAKER NAME"
               value={formData.caretakerName}
               onChange={e => handleInputChange('caretakerName', e.target.value)}
               placeholder="Enter Care Taker Name"
             />
 
-             <FormInput
+            <FormInput
               label="CARETAKER NO."
               type="tel"
               value={formData.caretakerNumber}
-              onChange={e =>
-                handleInputChange('caretakerNumber', e.target.value)
-              }
+              onChange={e => handleInputChange('caretakerNumber', e.target.value)}
               placeholder="Enter CareTaker Ph.No"
             />
 
@@ -458,17 +643,14 @@ const PropertyForm: React.FC = () => {
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-600 mb-2">CHECK-IN/OUT TIMES</label>
               <div className="grid grid-cols-2 gap-4">
-               
-
-                 <FormInput
+                <FormInput
                   label="C.I.T"
                   type="time"
                   value={formData.checkInTime}
                   onChange={e => handleInputChange('checkInTime', e.target.value)}
                 />
 
-
-               <FormInput
+                <FormInput
                   label="C.O.T"
                   type="time"
                   value={formData.checkOutTime}
@@ -480,88 +662,75 @@ const PropertyForm: React.FC = () => {
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-600 mb-2">BEDROOM CONFIGURATION</label>
               <div className="grid grid-cols-2 gap-4">
-                
-                 <FormSelect
+                <FormSelect
                   label="Master Bedroom"
                   value={formData.masterBedroom}
-                  onChange={e =>
-                    handleInputChange('masterBedroom', e.target.value)
-                  }
+                  onChange={e => handleInputChange('masterBedroom', e.target.value)}
                   options={[0, 1, 2, 3, 4, 5].map(num => ({
                     value: num.toString(),
                     label: num === 5 ? '5+' : num.toString()
                   }))}
                 />
-                
-                 <FormSelect
+
+                <FormSelect
                   label="Common Bedroom"
                   value={formData.commonBedroom}
-                  onChange={e =>
-                    handleInputChange('commonBedroom', e.target.value)
-                  }
+                  onChange={e => handleInputChange('commonBedroom', e.target.value)}
                   options={[0, 1, 2, 3, 4, 5].map(num => ({
                     value: num.toString(),
                     label: num === 5 ? '5+' : num.toString()
                   }))}
                 />
-
-
-
               </div>
             </div>
 
-           <div className='mt-7'>
-            <FormInput
-              label="LANDMARK"
-              value={formData.landmark}
-              onChange={e => handleInputChange('landmark', e.target.value)}
-              placeholder="Enter Landmark"
-            />
-           </div>
+            <div className='mt-7'>
+              <FormInput
+                label="LANDMARK"
+                value={formData.landmark}
+                onChange={e => handleInputChange('landmark', e.target.value)}
+                placeholder="Enter Landmark"
+              />
+            </div>
           </div>
 
           {/* Address Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="space-y-6">
-              
+              <FormInput
+                label="ADDRESS LINE 1"
+                value={formData.address1}
+                onChange={e => handleInputChange('address1', e.target.value)}
+                placeholder="Enter Property Address-1"
+              />
 
-             <FormInput
-              label="ADDRESS LINE 1"
-              value={formData.address1}
-              onChange={e => handleInputChange('address1', e.target.value)}
-              placeholder="Enter Property Address-1"
-            />
-          
-               <FormInput
-              label="ADDRESS LINE 2"
-              value={formData.address2}
-              onChange={e => handleInputChange('address2', e.target.value)}
-              placeholder="Enter Property Address-2"
-            />
+              <FormInput
+                label="ADDRESS LINE 2"
+                value={formData.address2}
+                onChange={e => handleInputChange('address2', e.target.value)}
+                placeholder="Enter Property Address-2"
+              />
             </div>
             <div className="space-y-6">
               <FormInput
-              label="ADDRESS LINE 3"
-              value={formData.address3}
-              onChange={e => handleInputChange('address3', e.target.value)}
-              placeholder="Enter Property Address-3"
-            />
-              
-               <FormInput
-              label="THUMBNAIL"
-              value={formData.thumbnail}
-              onChange={e => handleInputChange('thumbnail', e.target.value)}
-              placeholder="Enter Property Thumbnail"
-            />
+                label="ADDRESS LINE 3"
+                value={formData.address3}
+                onChange={e => handleInputChange('address3', e.target.value)}
+                placeholder="Enter Property Address-3"
+              />
 
+              <FormInput
+                label="THUMBNAIL"
+                value={formData.thumbnail}
+                onChange={e => handleInputChange('thumbnail', e.target.value)}
+                placeholder="Enter Property Thumbnail"
+              />
             </div>
           </div>
 
           {/* Property URL */}
           <div className="mb-8">
-            
-
-              <FormInput
+            <FormInput
               label="PROPERTY URL"
               value={formData.propertyUrl}
               onChange={e => handleInputChange('propertyUrl', e.target.value)}
@@ -575,15 +744,3 @@ const PropertyForm: React.FC = () => {
 };
 
 export default PropertyForm;
-
-
-
-
-
-
-
-
-
-
-
-
