@@ -8,6 +8,7 @@ import FormTextarea from "../../ui/FormTextarea"
 // Types
 interface HostData {
   host_id: number;
+  host_owner_name: string; 
   host_name: string;
   host_pan_number?: string;
   rating?: number;
@@ -19,7 +20,7 @@ interface HostData {
 interface PincodeData {
   pincode_id: number;
   pincode: string;
-  city?: string;
+  city: string;
   state?: string;
   district?: string;
 }
@@ -296,7 +297,7 @@ const PropertyForm: React.FC = () => {
       ...prev,
       hostId: host.host_id,
       hostName: host.host_name,
-      contactPerson: host.host_name,
+      contactPerson: host.host_owner_name,
       contactNumber: host.host_contact_number.replace('+1-', ''),
       emailId: host.host_email
     }));
@@ -574,11 +575,12 @@ const PropertyForm: React.FC = () => {
               value={formData.propertyType}
               onChange={e => handleInputChange('propertyType', e.target.value)}
               options={[
-                { value: 'apartment', label: 'Apartment' },
-                { value: 'house', label: 'House' },
-                { value: 'villa', label: 'Villa' },
+                { value: '1 BHK', label: '1 BHK' },
+                { value: '2 BHK', label: '2 BHK' },
+                { value: '3 BHK', label: '3 BHK' },
+                { value: '4 BHK', label: '4 BHK' },
                 { value: 'studio', label: 'Studio' },
-                { value: 'penthouse', label: 'Penthouse' }
+                
               ]}
             />
 
