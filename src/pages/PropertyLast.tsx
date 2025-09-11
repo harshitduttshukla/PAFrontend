@@ -1,179 +1,131 @@
-import  { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TableHeader from '../ui/TableHeader'
 import Tablebody from '../ui/Tablebody'
 import LableAndValue from '../ui/LableAndValue'
 import { ChevronDown, Search, Plus, Edit, Eye, Trash2, X } from 'lucide-react';
+
 const PropertyDashboard = () => {
   const [showEntries, setShowEntries] = useState('10');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showOptionsDropdown, setShowOptionsDropdown] = useState(null);
+  
+  // New state for API integration
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    hasNext: false,
+    hasPrev: false
+  });
 
-  const reservationData = [
-    {
-      postId: '23935',
-      city: 'Thane',
-      locations: 'Mumbai',
-      host: 'Business Stay Solution',
-      address: '701- IXORA, Hiranandani Meadows, Near Club House, Off Kashinath Ghanekar Road, Thane West 400604',
-      landmark: 'Club House',
-      type: '4 BHK',
-      propertyId: '400604003',
-      contactPerson: 'Karan',
-      contactNo: '8879124830',
-      email: 'poonam@businessstay.co.in',
-      url: 'https://www.pajasaapartments.com/?p=8020'
-    },
-    {
-      postId: '0',
-      city: 'Thane',
-      locations: '',
-      host: 'Go BnB',
-      address: 'D 103, 1st Floor, Vasant Fiona-D,Majiwade Vasant Fiona Eastern Express High way,near Jupitor Hospital, Thane 400601400601',
-      landmark: '',
-      type: '1 BHK',
-      propertyId: '400601001',
-      contactPerson: 'Rahul',
-      contactNo: '9876543210',
-      email: 'info@gobnb.co.in',
-      url: ''
-    },
-    {
-      postId: '0',
-      city: 'Thane',
-      locations: 'GB Road',
-      host: 'Go BnB',
-      address: 'F-2, 1703, Hyde Park,Near Hiranandani MeadowsThane, 400610400610',
-      landmark: '',
-      type: '3 BHK',
-      propertyId: '400610002',
-      contactPerson: 'Priya',
-      contactNo: '9123456789',
-      email: 'priya@gobnb.co.in',
-      url: ''
-    },
-    {
-      postId: '0',
-      city: 'Rajkot',
-      locations: 'Rajkot',
-      host: 'Dev Abode',
-      address: 'Dev Abode 41 New Jagnath Plot Dr. Yagnik Road360001',
-      landmark: 'Dr. Yagnik Road',
-      type: 'Studio',
-      propertyId: '360001001',
-      contactPerson: 'Dev',
-      contactNo: '9988776655',
-      email: 'dev@devabode.com',
-      url: ''
-    },
-    {
-      postId: '19813',
-      city: 'Rajkot',
-      locations: 'Rajkot',
-      host: 'Demo Property',
-      address: '360001',
-      landmark: '',
-      type: '1 BHK',
-      propertyId: '360001002',
-      contactPerson: 'Demo User',
-      contactNo: '1234567890',
-      email: 'demo@example.com',
-      url: ''
-    },
-    {
-      postId: '19817',
-      city: 'Rajkot',
-      locations: 'Rajkot',
-      host: 'Demo Property',
-      address: '360001',
-      landmark: '',
-      type: 'Studio',
-      propertyId: '360001003',
-      contactPerson: 'Demo User',
-      contactNo: '1234567890',
-      email: 'demo@example.com',
-      url: ''
-    },
-    {
-      postId: '3299',
-      city: 'Pune',
-      locations: 'Baner',
-      host: 'Corporate Stays',
-      address: 'Flat No. 304, 9- Shayadri Farms, 411045',
-      landmark: 'opp Prabhavee Tech Park',
-      type: '1 BHK',
-      propertyId: '411045001',
-      contactPerson: 'Amit',
-      contactNo: '8765432109',
-      email: 'amit@corporatestays.com',
-      url: ''
-    },
-    {
-      postId: '3289',
-      city: 'Pune',
-      locations: 'Baner',
-      host: 'Corporate Stays',
-      address: 'Flat No. 301, 9- Shayadri Farms, 411045',
-      landmark: 'opp Prabhavee Tech Park',
-      type: '1 BHK',
-      propertyId: '411045002',
-      contactPerson: 'Amit',
-      contactNo: '8765432109',
-      email: 'amit@corporatestays.com',
-      url: ''
-    },
-    {
-      postId: '3309',
-      city: 'Pune',
-      locations: 'Baner',
-      host: 'Cozy Nest Service Apartments',
-      address: 'Flat No. 201, B/H Ganaraj Mangal Karyalaya, 411045',
-      landmark: 'Behind Ganaraj Mangal Karyalaya',
-      type: '3 BHK',
-      propertyId: '411045003',
-      contactPerson: 'Neha',
-      contactNo: '7654321098',
-      email: 'neha@cozynest.com',
-      url: ''
-    }
-  ];
-
-
-    const Columns = [
+  const Columns = [
     "Post ID",
     "City",
     "Locations",
-    "Host",
+    "Host Owner",
     "Address",
     "Landmark",
     "Type",
     "Name",
   ];
 
+  // Fetch properties from API
+  const fetchProperties = async (page = 1, limit = 30) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/properties?page=${page}&limit=${limit}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
+      }
+      
+      const result = await response.json();
+      
+      setProperties(result.data || []);
+      setPagination(result.pagination || {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        hasNext: false,
+        hasPrev: false
+      });
+      
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching properties:', err);
+      // Fallback to empty array if API fails
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredData = reservationData.filter(item =>
+  // Load properties on component mount
+  useEffect(() => {
+    fetchProperties(1, parseInt(showEntries));
+  }, []);
+
+  // Reload when showEntries changes
+  useEffect(() => {
+    fetchProperties(1, parseInt(showEntries));
+  }, [showEntries]);
+
+  // Filter data based on search term
+  const filteredData = properties.filter(item =>
     Object.values(item).some(value =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
-  const handleOptionsClick = (index:any, e:any) => {
+  const handleOptionsClick = (index, e) => {
     e.stopPropagation();
     setShowOptionsDropdown(showOptionsDropdown === index ? null : index);
   };
 
-  const handleEdit = (item:any) => {
+  const handleEdit = (item) => {
     console.log('Edit item:', item);
     setShowOptionsDropdown(null);
+    // You can implement edit functionality here
   };
 
-  const handleView = (item:any) => {
+  const handleView = (item) => {
     setSelectedProperty(item);
     setShowOptionsDropdown(null);
   };
 
-  const handleDelete = (item:any) => {
-    console.log('Delete item:', item);
+  const handleDelete = async (item) => {
+    if (!confirm(`Are you sure you want to delete property ${item.property_id }?`)) {
+      return;
+    }
+
+    try {
+      const propertyId = item.property_id ;
+      const response = await fetch(`http://localhost:5000/api/deleteProperty/${propertyId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete property');
+      }
+      
+      const result = await response.json();
+      alert(result.message || 'Property deleted successfully');
+      
+      // Refresh the data
+      fetchProperties(pagination.currentPage, parseInt(showEntries));
+      
+    } catch (err) {
+      setError(err.message);
+      console.error('Error deleting property:', err);
+      alert('Failed to delete property: ' + err.message);
+    }
+    
     setShowOptionsDropdown(null);
   };
 
@@ -195,25 +147,25 @@ const PropertyDashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              
-              <LableAndValue value={property.propertyId} lable='Property Id'/>
+              <LableAndValue value={property.property_id} lable='Property Id'/>
               <LableAndValue value={property.city} lable='City'/>
-              <LableAndValue value={property.host}lable='Host'/>
-              <LableAndValue value={property.contactPerson}lable='Contact Person'/>
-              <LableAndValue value={property.email}lable='Email-Id'/>
-              {/* <LableAndValue value={}lable='Caretaker Name'/> */}
-              <LableAndValue value={property.address}lable='Address'/>
+              <LableAndValue value={property.property_status} lable='Status'/>
+              {/* want to add */}
+              <LableAndValue value={property.host} lable='Host'/>  
+              <LableAndValue value={property.ivr_number} lable='IVR Number'/>  
+              <LableAndValue value={property.contact_person} lable='Contact Person'/>   
+              <LableAndValue value={property.contact_person} lable='Contact Person'/>
+              <LableAndValue value={property.email_id} lable='Email-Id'/>
+              <LableAndValue value={property.address1} lable='Address 1'/> 
+              <LableAndValue value={property.address2} lable='Address 2'/> 
+              <LableAndValue value={property.address3} lable='Address 3'/> 
               
-              
-              
-              
-            
               <div className="flex flex-col sm:flex-row">
                 <span className="font-medium text-gray-700 w-full sm:w-32 mb-1 sm:mb-0">URL</span>
                 <span className="text-blue-600 break-all">: 
-                  {property.url ? (
-                    <a href={property.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                      {property.url}
+                  {property.property_url ? (
+                    <a href={property.property_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {property.property_url}
                     </a>
                   ) : (
                     'N/A'
@@ -223,12 +175,15 @@ const PropertyDashboard = () => {
             </div>
 
             <div className="space-y-4">
-              <LableAndValue value={property.postId}lable='Post Id'/>
-              <LableAndValue value={property.locations}lable='Location'/>
-              <LableAndValue value={property.type}lable='Apartments Type'/>
-              <LableAndValue value={property.contactNo}lable='Contact No.'/>
-              <LableAndValue value={property.landmark}lable='Landmark'/>
-              {/* <LableAndValue value={property.landmark}lable='Care Taker No.'/> */}
+              <LableAndValue value={property.post_id || property.postId} lable='Post Id'/>
+              <LableAndValue value={property.location} lable='Location'/>
+              <LableAndValue value={property.property_type} lable='Apartments Type'/>
+              <LableAndValue value={property.contact_number || property.contactNo} lable='Contact No.'/>
+              <LableAndValue value={property.landmark} lable='Landmark'/>
+              <LableAndValue value={property.caretaker_name} lable='Caretaker Name'/>
+              <LableAndValue value={property.caretaker_number} lable='Caretaker Number'/>
+              <LableAndValue value={property.master_bedroom} lable='Master Bedroom'/>
+              <LableAndValue value={property.common_bedroom} lable='Common bedroom'/>
             </div>
           </div>
 
@@ -245,11 +200,21 @@ const PropertyDashboard = () => {
     );
   };
 
+  // Handle pagination
+  const handlePreviousPage = () => {
+    if (pagination.hasPrev) {
+      fetchProperties(pagination.currentPage - 1, parseInt(showEntries));
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination.hasNext) {
+      fetchProperties(pagination.currentPage + 1, parseInt(showEntries));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      
-
       {/* Main Content */}
       <div className="p-6">
         {/* Page Header */}
@@ -267,6 +232,13 @@ const PropertyDashboard = () => {
             </button>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 text-red-600 bg-red-50 p-3 rounded-md">
+            {error}
+          </div>
+        )}
 
         {/* Controls */}
         <div className="flex items-center justify-between mb-6">
@@ -300,72 +272,121 @@ const PropertyDashboard = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <TableHeader Columns={Columns} />
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.slice(0, parseInt(showEntries)).map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.postId}</td> */}
-                    <Tablebody value={item.postId}/>
-                    <Tablebody value={item.city}/>
-                    <Tablebody value={item.locations}/>
-                    <Tablebody value={item.host}/>
-                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">{item.address}</td>
-                    <Tablebody value={item.landmark}/>
-                    <Tablebody value={item.type}/>
-                    
-                  
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="relative">
-                        <button
-                          onClick={(e) => handleOptionsClick(index, e)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs flex items-center space-x-1 transition-colors"
-                        >
-                          <span>Options</span>
-                          <ChevronDown className="w-3 h-3" />
-                        </button>
-                        
-                        {showOptionsDropdown === index && (
-                          <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                            <button
-                              onClick={() => handleEdit(item)}
-                              className="flex items-center space-x-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                              <span>Edit</span>
-                            </button>
-                            <button
-                              onClick={() => handleView(item)}
-                              className="flex items-center space-x-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                              <span>View</span>
-                            </button>
-                            <button
-                              onClick={() => handleDelete(item)}
-                              className="flex items-center space-x-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              <span>Delete</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center p-8">
+            <div className="text-lg text-gray-600">Loading properties...</div>
           </div>
-        </div>
+        )}
 
-        {/* Pagination Info */}
-        <div className="mt-4 text-sm text-gray-700">
-          Showing 1 to {Math.min(parseInt(showEntries), filteredData.length)} of {filteredData.length} entries
-        </div>
+        {/* Table */}
+        {!loading && (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <TableHeader Columns={Columns} />
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredData.length > 0 ? filteredData.map((item, index) => (
+                    <tr key={item.property_id || item.propertyId || index} className="hover:bg-gray-50 transition-colors">
+                      <Tablebody value={item.post_id || item.postId || '0'}/>
+                      <Tablebody value={item.city || 'N/A'}/>
+                      <Tablebody value={item.location || 'N/A'}/>
+                      <Tablebody value={item.contact_person || 'N/A'}/>
+                      <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">{item.address1 || 'N/A'}</td>
+                      <Tablebody value={item.landmark || 'N/A'}/>
+                      <Tablebody value={item.type || 'N/A'}/>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="relative">
+                          <button
+                            onClick={(e) => handleOptionsClick(index, e)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs flex items-center space-x-1 transition-colors"
+                          >
+                            <span>Options</span>
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                          
+                          {showOptionsDropdown === index && (
+                            <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                              <button
+                                onClick={() => handleEdit(item)}
+                                className="flex items-center space-x-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleView(item)}
+                                className="flex items-center space-x-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              >
+                                <Eye className="w-4 h-4" />
+                                <span>View</span>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item)}
+                                className="flex items-center space-x-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                        No properties found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination Info and Controls */}
+        {!loading && (
+          <div className="mt-4 flex justify-between items-center">
+            <div className="text-sm text-gray-700">
+              Showing {((pagination.currentPage - 1) * parseInt(showEntries)) + 1} to {Math.min(pagination.currentPage * parseInt(showEntries), pagination.totalItems)} of {pagination.totalItems} entries
+            </div>
+            
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={!pagination.hasPrev}
+                  className={`px-3 py-1 rounded text-sm ${
+                    pagination.hasPrev
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                <span className="text-sm text-gray-700">
+                  Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+                
+                <button
+                  onClick={handleNextPage}
+                  disabled={!pagination.hasNext}
+                  className={`px-3 py-1 rounded text-sm ${
+                    pagination.hasNext
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Property Details Modal */}
@@ -386,4 +407,3 @@ const PropertyDashboard = () => {
 };
 
 export default PropertyDashboard;
-
