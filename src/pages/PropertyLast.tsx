@@ -4,6 +4,8 @@ import Tablebody from '../ui/Tablebody'
 import LableAndValue from '../ui/LableAndValue'
 import { ChevronDown, Search, Plus, Edit, Eye, Trash2, X } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const PropertyDashboard = () => {
   const [showEntries, setShowEntries] = useState('10');
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,7 +41,7 @@ const PropertyDashboard = () => {
     setError('');
     
     try {
-      const response = await fetch(`http://localhost:5000/api/properties?page=${page}&limit=${limit}`);
+      const response = await fetch(`${API_BASE_URL}api/properties?page=${page}&limit=${limit}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
@@ -56,7 +58,7 @@ const PropertyDashboard = () => {
         hasPrev: false
       });
       
-    } catch (err) {
+    } catch (err:any) {
       setError(err.message);
       console.error('Error fetching properties:', err);
       // Fallback to empty array if API fails
@@ -83,30 +85,30 @@ const PropertyDashboard = () => {
     )
   );
 
-  const handleOptionsClick = (index, e) => {
+  const handleOptionsClick = (index:any, e:any) => {
     e.stopPropagation();
     setShowOptionsDropdown(showOptionsDropdown === index ? null : index);
   };
 
-  const handleEdit = (item) => {
+  const handleEdit = (item:any) => {
     console.log('Edit item:', item);
     setShowOptionsDropdown(null);
     // You can implement edit functionality here
   };
 
-  const handleView = (item) => {
+  const handleView = (item:any) => {
     setSelectedProperty(item);
     setShowOptionsDropdown(null);
   };
 
-  const handleDelete = async (item) => {
+  const handleDelete = async (item:any) => {
     if (!confirm(`Are you sure you want to delete property ${item.property_id }?`)) {
       return;
     }
 
     try {
       const propertyId = item.property_id ;
-      const response = await fetch(`http://localhost:5000/api/deleteProperty/${propertyId}`, {
+      const response = await fetch(`${API_BASE_URL}api/deleteProperty/${propertyId}`, {
         method: 'DELETE'
       });
       
@@ -120,7 +122,7 @@ const PropertyDashboard = () => {
       // Refresh the data
       fetchProperties(pagination.currentPage, parseInt(showEntries));
       
-    } catch (err) {
+    } catch (err:any) {
       setError(err.message);
       console.error('Error deleting property:', err);
       alert('Failed to delete property: ' + err.message);
@@ -129,7 +131,10 @@ const PropertyDashboard = () => {
     setShowOptionsDropdown(null);
   };
 
-  const PropertyDetailsModal = ({ property, onClose }) => {
+  const PropertyDetailsModal = ({ property, onClose }:{
+    property : any,
+    onClose : any,
+  }) => {
     if (!property) return null;
 
     return (
@@ -286,7 +291,7 @@ const PropertyDashboard = () => {
               <table className="w-full">
                 <TableHeader Columns={Columns} />
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredData.length > 0 ? filteredData.map((item, index) => (
+                  {filteredData.length > 0 ? filteredData.map((item:any, index) => (
                     <tr key={item.property_id || item.propertyId || index} className="hover:bg-gray-50 transition-colors">
                       <Tablebody value={item.post_id || item.postId || '0'}/>
                       <Tablebody value={item.city || 'N/A'}/>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // TypeScript interfaces
 
 interface Host {
@@ -46,7 +48,7 @@ const hostAPI = {
   // Get all hosts with pagination
   getHosts: async (page: number = 1, limit: number = 30): Promise<ApiResponse> => {
     try {
-      const response = await fetch(`http://localhost:5000/api/hostsList?page=${page}&limit=${limit}`);
+      const response = await fetch(`${API_BASE_URL}api/hostsList?page=${page}&limit=${limit}`);
       if (!response.ok) {
         throw new Error('Failed to fetch hosts');
       }
@@ -75,7 +77,7 @@ const hostAPI = {
   // Update host
   updateHost: async (hostId: number, hostData: Partial<Host>): Promise<Host> => {
     try {
-      const response = await fetch(`http://localhost:5000/api/updateHost/${hostId}`, {
+      const response = await fetch(`${API_BASE_URL}api/updateHost/${hostId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +100,7 @@ const hostAPI = {
   // Delete host
   deleteHost: async (hostId: number): Promise<void> => {
     try {
-      const response = await fetch(`http://localhost:5000/api/deleteHost/${hostId}`, {
+      const response = await fetch(`${API_BASE_URL}api/deleteHost/${hostId}`, {
         method: 'DELETE'
       });
       if (!response.ok) {

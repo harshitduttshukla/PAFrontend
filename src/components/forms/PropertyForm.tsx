@@ -4,6 +4,7 @@ import FormInput from "../../ui/FormInput"
 import FormSelect from "../../ui/FormSelect"
 import FormTextarea from "../../ui/FormTextarea"
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Types
 interface HostData {
@@ -236,7 +237,7 @@ const PropertyForm: React.FC = () => {
 
     setIsHostLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/host?hostname=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`${API_BASE_URL}api/host?hostname=${encodeURIComponent(searchTerm)}`);
       if (response.ok) {
         const data = await response.json();
         setHostSearchResults(Array.isArray(data) ? data : []);
@@ -259,7 +260,7 @@ const PropertyForm: React.FC = () => {
 
     setIsPincodeLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/PinCode?pincode=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`${API_BASE_URL}/api/PinCode?pincode=${encodeURIComponent(searchTerm)}`);
       if (response.ok) {
         const data = await response.json();
         setPincodeSearchResults(Array.isArray(data) ? data : []);
@@ -375,7 +376,7 @@ const PropertyForm: React.FC = () => {
       //  ✅ only include columns that exist in DB
     };
 
-    const response = await fetch("http://localhost:5000/api/properties", {
+    const response = await fetch(`${API_BASE_URL}api/properties`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Save, X, User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import ClientInput from '../../ui/ClientInput';
 
+
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 interface ClientData {
   active: boolean;
   clientName: string;
@@ -65,7 +69,7 @@ const ClientForm: React.FC = () => {
   setMessage(null);
 
   try {
-    const response = await fetch("http://localhost:5000/api/insertClient", {
+    const response = await fetch(`${API_BASE_URL}api/insertClient`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, Eye, Edit, FileText, Receipt, Trash2, MoreVertical } from 'lucide-react';
 
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 interface Client {
   id: number;
   name: string;

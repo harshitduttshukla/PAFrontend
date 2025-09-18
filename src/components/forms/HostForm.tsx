@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { z } from 'zod';
 import { HostData } from "../../types/host";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // TypeScript interfaces
 interface ValidationErrors {
   [key: string]: string;
@@ -96,9 +98,13 @@ export default function HostDetailsForm(): React.JSX.Element {
     }
     return '';
   } catch (error: any) {
-    if (error instanceof z.ZodError && Array.isArray(error.errors) && error.errors.length > 0) {
-      return error.errors[0].message;
-    }
+    // if (error instanceof z.ZodError && Array.isArray(error.errors) && error.errors.length > 0) {
+    //   return error.errors[0].message;
+    // }
+      if (error instanceof z.ZodError && Array.isArray(error.issues) && error.issues.length > 0) {
+      return error.issues[0].message;
+      }
+
     console.error("Unexpected validation error:", error);
     return 'Invalid input';
   }
@@ -227,9 +233,9 @@ export default function HostDetailsForm(): React.JSX.Element {
       setErrors({});
       return true;
     } catch (error) {
-      if (error instanceof z.ZodError && error.errors) {
+      if (error instanceof z.ZodError && error.issues) {
         const newErrors: ValidationErrors = {};
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           if (err.path && err.path.length > 0) {
             newErrors[err.path[0] as string] = err.message;
           }
@@ -326,7 +332,7 @@ export default function HostDetailsForm(): React.JSX.Element {
       const validatedData = hostSchema.parse(apiData);
       
       // Replace with your actual API endpoint
-      const response = await fetch('http://localhost:5000/api/hosts', {
+      const response = await fetch(`${API_BASE_URL}api/hosts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -386,10 +392,10 @@ export default function HostDetailsForm(): React.JSX.Element {
       }, 4000); // Increased timeout to allow users to read the message
 
     } catch (error) {
-      if (error instanceof z.ZodError && error.errors) {
+      if (error instanceof z.ZodError && error.issues) {
         // Handle Zod validation errors
         const validationErrors: ValidationErrors = {};
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           if (err.path && err.path.length > 0) {
             validationErrors[err.path[0] as string] = err.message;
           }

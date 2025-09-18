@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, MapPin, Building, Hash, AlertCircle, CheckCircle } from 'lucide-react';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface Pincode {
   pincode_id: number;
@@ -30,7 +31,7 @@ const PincodeManager: React.FC = () => {
   const fetchPincodes = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/AllPinCode',{
+      const response = await fetch(`${API_BASE_URL}api/AllPinCode`,{
          method: 'GET',
       });
       if (response.ok) {
@@ -55,7 +56,7 @@ const PincodeManager: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:5000/api/Pincode', {
+      const response = await fetch(`${API_BASE_URL}api/Pincode`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
