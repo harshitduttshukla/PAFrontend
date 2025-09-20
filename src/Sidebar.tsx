@@ -13,6 +13,7 @@ const menuItems: MenuItem[] = [
   { label: "Property Last", path: "/PropertyLast" },
   { label: "Client Form", path: "/ClientForm" },
   { label: "Client Last", path: "/ClientLast" },
+  { label: "Reservation Management", path: "/ReservationManagementSystem" },
   
 
 ];

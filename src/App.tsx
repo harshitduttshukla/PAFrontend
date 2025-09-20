@@ -4,6 +4,7 @@ import PincodeManager from './pages/PincodeManager';
 
 import PropertyForm from './components/forms/PropertyForm';
 import ClientForm from './components/forms/ClientForm';
+import ReservationManagementSystem from './components/forms/ReservationManagementSystem';
 import HostList from './pages/HostLast'
 import PropertyLast from './pages/PropertyLast'
 import ClientLast from './pages/ClientLast'
@@ -22,6 +23,7 @@ function App() {
           <Route path="/PropertyLast" element={<PropertyLast />} />
           <Route path="/ClientForm" element={<ClientForm />} />
           <Route path="/ClientLast" element={<ClientLast />} />
+          <Route path="/ReservationManagementSystem" element={<ReservationManagementSystem />} />
         </Route> 
       </Routes>
     </BrowserRouter>
