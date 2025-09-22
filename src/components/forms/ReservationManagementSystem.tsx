@@ -259,7 +259,7 @@ const ReservationManagementSystem: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-blue-600 text-white p-4">
+      {/* <div className="bg-blue-600 text-white p-4">
         <div className="flex items-center justify-between">
           <nav className="flex space-x-6">
             <span className="cursor-pointer hover:text-blue-200">Dashboard</span>
@@ -276,7 +276,7 @@ const ReservationManagementSystem: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Action Buttons */}
       <div className="bg-white p-4 flex justify-end space-x-2 border-b">

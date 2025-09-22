@@ -260,7 +260,7 @@ const PropertyForm: React.FC = () => {
 
     setIsPincodeLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/PinCode?pincode=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`${API_BASE_URL}api/PinCode?pincode=${encodeURIComponent(searchTerm)}`);
       if (response.ok) {
         const data = await response.json();
         setPincodeSearchResults(Array.isArray(data) ? data : []);
@@ -315,91 +315,91 @@ const PropertyForm: React.FC = () => {
     }));
   };
 
-  // const handleSave = async () => {
-  //   try {
-  //     // Prepare data for API - send IDs instead of names
-  //     const propertyData = {
-  //       property_status: formData.propertyStatus,
-  //       host_id: formData.hostId,
-  //       ivr_number: formData.ivrNumber,
-  //       pincode_id: formData.pincodeId,
-  //       city: formData.city,
-  //       location: formData.location,
-  //       post_id: formData.postId,
-  //       property_type: formData.propertyType,
-  //       contact_person: formData.contactPerson,
-  //       contact_number: formData.contactNumber,
-  //       email_id: formData.emailId,
-  //       caretaker_name: formData.caretakerName,
-  //       caretaker_number: formData.caretakerNumber,
-  //       note: formData.note,
-  //       check_in_time: formData.checkInTime,
-  //       check_out_time: formData.checkOutTime,
-  //       master_bedroom: parseInt(formData.masterBedroom),
-  //       common_bedroom: parseInt(formData.commonBedroom),
-  //       landmark: formData.landmark,
-  //       address1: formData.address1,
-  //       address2: formData.address2,
-  //       address3: formData.address3,
-  //       thumbnail: formData.thumbnail,
-  //       property_url: formData.propertyUrl
-  //     };
-
-  //     const response = await fetch('http://localhost:5000/api/properties', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(propertyData)
-  //     });
-
-  //     if (response.ok) {
-  //       const result = await response.json();
-  //       alert('Property saved successfully!\n\nProperty ID: ' + result.property.property_id);
-  //       console.log('Saved property:', result);
-  //     } else {
-  //       const error = await response.json();
-  //       alert('Error saving property: ' + (error.error || 'Unknown error'));
-  //     }
-  //   } catch (error) {
-  //     console.error('Error saving property:', error);
-  //     alert('Error saving property. Please try again.');
-  //   }
-  // };
-
   const handleSave = async () => {
-  try {
-    const propertyData = {
-      property_status: formData.propertyStatus,
-      host_id: formData.hostId,
-      pincode_id: formData.pincodeId
-      //  ✅ only include columns that exist in DB
-    };
+    try {
+      // Prepare data for API - send IDs instead of names
+      const propertyData = {
+        property_status: formData.propertyStatus,
+        host_id: formData.hostId,
+        ivr_number: formData.ivrNumber,
+        pincode_id: formData.pincodeId,
+        city: formData.city,
+        location: formData.location,
+        post_id: formData.postId,
+        property_type: formData.propertyType,
+        contact_person: formData.contactPerson,
+        contact_number: formData.contactNumber,
+        email_id: formData.emailId,
+        caretaker_name: formData.caretakerName,
+        caretaker_number: formData.caretakerNumber,
+        note: formData.note,
+        check_in_time: formData.checkInTime,
+        check_out_time: formData.checkOutTime,
+        master_bedroom: parseInt(formData.masterBedroom),
+        common_bedroom: parseInt(formData.commonBedroom),
+        landmark: formData.landmark,
+        address1: formData.address1,
+        address2: formData.address2,
+        address3: formData.address3,
+        thumbnail: formData.thumbnail,
+        property_url: formData.propertyUrl
+      };
 
-    const response = await fetch(`${API_BASE_URL}api/properties`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(propertyData),
-    });
+      const response = await fetch(`${API_BASE_URL}api/properties`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(propertyData)
+      });
 
-    if (response.ok) {
-      const result = await response.json();
-      alert(
-        "Property saved successfully!\n\nProperty ID: " +
-          result.property.property_id
-      );
-      console.log("Saved property:", result);
-    } else {
-      const error = await response.json();
-      alert("Error saving property: " + (error.error || "Unknown error"));
+      if (response.ok) {
+        const result = await response.json();
+        alert('Property saved successfully!\n\nProperty ID: ' + result.property.property_id);
+        console.log('Saved property:', result);
+      } else {
+        const error = await response.json();
+        alert('Error saving property: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error saving property:', error);
+      alert('Error saving property. Please try again.');
     }
-  } catch (error) {
-    console.error("Error saving property:", error);
-    alert("Error saving property. Please try again.");
-  }
-};
+  };
+
+//   const handleSave = async () => {
+//   try {
+//     const propertyData = {
+//       property_status: formData.propertyStatus,
+//       host_id: formData.hostId,
+//       pincode_id: formData.pincodeId
+//       //  ✅ only include columns that exist in DB
+//     };
+
+//     const response = await fetch(`${API_BASE_URL}api/properties`, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(propertyData),
+//     });
+
+//     if (response.ok) {
+//       const result = await response.json();
+//       alert(
+//         "Property saved successfully!\n\nProperty ID: " +
+//           result.property.property_id
+//       );
+//       console.log("Saved property:", result);
+//     } else {
+//       const error = await response.json();
+//       alert("Error saving property: " + (error.error || "Unknown error"));
+//     }
+//   } catch (error) {
+//     console.error("Error saving property:", error);
+//     alert("Error saving property. Please try again.");
+//   }
+// };
 
   const handleCancel = () => {
     if (window.confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
