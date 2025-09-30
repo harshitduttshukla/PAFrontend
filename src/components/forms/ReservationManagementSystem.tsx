@@ -18,6 +18,10 @@ interface Property {
   address3?: string;
   host_name?: string;
   host_email?: string;
+  contact_person?: string; 
+  contact_number?:string;
+  thumbnail?:string;
+  property_url?:string;
 }
 
 interface GuestInfo {
@@ -287,7 +291,10 @@ const ReservationManagementSystem: React.FC = () => {
       ...prev,
       propertyAddress: property.address1,
       hostName: property.host_name || '',
-      hostEmail: property.host_email || ''
+      hostEmail: property.host_email || '',
+      contactPerson: property.contact_person || '',
+      contactNumber: property.contact_number || '',
+      propertyThumbnail: property.thumbnail || ''
     }));
   };
 
@@ -575,7 +582,7 @@ const ReservationManagementSystem: React.FC = () => {
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                   {propertySearchResults.map((property) => (
                     <div
-                      key={property.id}
+                      key={property.property_id}
                       className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
                       onClick={() => handlePropertySelect(property)}
                     >
