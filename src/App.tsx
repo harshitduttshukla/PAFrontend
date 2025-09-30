@@ -1,13 +1,13 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import HostForm from './components/forms/HostForm';
 import PincodeManager from './pages/PincodeManager';
-
 import PropertyForm from './components/forms/PropertyForm';
 import ClientForm from './components/forms/ClientForm';
 import ReservationManagementSystem from './components/forms/ReservationManagementSystem';
 import HostList from './pages/HostLast'
 import PropertyLast from './pages/PropertyLast'
 import ClientLast from './pages/ClientLast'
+import ReservationList from './pages/ReservationList'
 import Layout from './Layout';
 
 
@@ -24,6 +24,7 @@ function App() {
           <Route path="/ClientForm" element={<ClientForm />} />
           <Route path="/ClientLast" element={<ClientLast />} />
           <Route path="/ReservationManagementSystem" element={<ReservationManagementSystem />} />
+          <Route path="/ReservationList" element={<ReservationList />} />
         </Route> 
       </Routes>
     </BrowserRouter>
