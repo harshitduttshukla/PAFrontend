@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Eye, Mail, FileText, User, Home, Calendar, XCircle, Settings, HelpCircle, Power } from 'lucide-react';
+import { X, Eye, Mail, FileText, User, Home, Calendar, XCircle, Settings } from 'lucide-react';
 
 // Types
 interface Reservation {

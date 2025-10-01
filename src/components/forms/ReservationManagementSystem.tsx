@@ -10,7 +10,6 @@ interface Client {
 }
 
 interface Property {
-  // id: string;
   property_id: string;
   property_name: string;
   address1: string;
