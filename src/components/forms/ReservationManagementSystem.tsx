@@ -18,16 +18,19 @@ interface Property {
   host_name?: string;
   host_email?: string;
   contact_person?: string; 
-  contact_number?:string;
-  thumbnail?:string;
-  property_url?:string;
+  contact_number?: string;
+  thumbnail?: string;
+  property_url?: string;
 }
 
 interface GuestInfo {
   companyName: string;
   guestName: string;
   guestEmail: string;
-  cid: string;
+  checkInDate: string;
+  checkInTime: string;
+  checkOutDate: string;
+  checkOutTime: string;
   contactNumber: string;
   baseRate: string;
   taxes: string;
@@ -35,8 +38,6 @@ interface GuestInfo {
   paymentMode: string;
   tariffType: string;
   occupancy: string;
-  checkInTime: string;
-  checkOutTime: string;
   chargeableDays: string;
   adminEmail: string;
 }
@@ -52,13 +53,9 @@ interface ApartmentInfo {
   hostTotalAmount: string;
   contactPerson: string;
   contactNumber: string;
-  checkInDate: string;
-  checkOutDate: string;
-  checkInTime: string;
-  checkOutTime: string;
-  chargeableDays: string;
   hostTariffType: string;
   hostPaymentMethod: string;
+  chargeableDays: string;
 }
 
 interface PajasaInfo {
@@ -117,7 +114,10 @@ const ReservationManagementSystem: React.FC = () => {
     companyName: '',
     guestName: '',
     guestEmail: '',
-    cid: '',
+    checkInDate: '',
+    checkInTime: '14:00',
+    checkOutDate: '',
+    checkOutTime: '11:00',
     contactNumber: '',
     baseRate: '',
     taxes: '',
@@ -125,8 +125,6 @@ const ReservationManagementSystem: React.FC = () => {
     paymentMode: '',
     tariffType: '',
     occupancy: '',
-    checkInTime: '12:00',
-    checkOutTime: '11:00',
     chargeableDays: '',
     adminEmail: ''
   });
@@ -142,13 +140,9 @@ const ReservationManagementSystem: React.FC = () => {
     hostTotalAmount: '',
     contactPerson: '',
     contactNumber: '',
-    checkInDate: '',
-    checkOutDate: '',
-    checkInTime: '12:00',
-    checkOutTime: '11:00',
-    chargeableDays: '',
     hostTariffType: '',
-    hostPaymentMethod: ''
+    hostPaymentMethod: '',
+    chargeableDays: ''
   });
 
   const [pajasaInfo, setPajasaInfo] = useState<PajasaInfo>({
@@ -166,8 +160,58 @@ const ReservationManagementSystem: React.FC = () => {
 
   const [roomSelection, setRoomSelection] = useState<string[]>([]);
 
-  // API Base URL - You'll need to set this
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // Replace with your actual API URL
+  // Shared dates and times state
+  const [sharedCheckInDate, setSharedCheckInDate] = useState<string>('');
+  const [sharedCheckInTime, setSharedCheckInTime] = useState<string>('14:00');
+  const [sharedCheckOutDate, setSharedCheckOutDate] = useState<string>('');
+  const [sharedCheckOutTime, setSharedCheckOutTime] = useState<string>('11:00');
+
+  // Calculate chargeable days
+  const calculateChargeableDays = (checkInDate: string, checkOutDate: string): string => {
+    if (!checkInDate || !checkOutDate) return '';
+    
+    try {
+      const checkIn = new Date(checkInDate);
+      const checkOut = new Date(checkOutDate);
+      
+      if (checkOut <= checkIn) return '';
+      
+      // Calculate difference in milliseconds
+      const diffTime = checkOut.getTime() - checkIn.getTime();
+      
+      // Convert to hours
+      const diffHours = diffTime / (1000 * 60 * 60);
+      
+      // If more than 24 hours, return 2 days, otherwise use ceil
+      let days = Math.ceil(diffHours / 24);
+      
+      return days.toString();
+    } catch (error) {
+      return '';
+    }
+  };
+
+  // Sync shared dates to guestInfo and apartmentInfo
+  useEffect(() => {
+    const chargeableDays = calculateChargeableDays(sharedCheckInDate, sharedCheckOutDate);
+    
+    setGuestInfo(prev => ({
+      ...prev,
+      checkInDate: sharedCheckInDate,
+      checkInTime: sharedCheckInTime,
+      checkOutDate: sharedCheckOutDate,
+      checkOutTime: sharedCheckOutTime,
+      chargeableDays: chargeableDays
+    }));
+
+    setApartmentInfo(prev => ({
+      ...prev,
+      chargeableDays: chargeableDays
+    }));
+  }, [sharedCheckInDate, sharedCheckInTime, sharedCheckOutDate, sharedCheckOutTime]);
+
+  // API Base URL
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Client search functionality
   const searchClients = async (searchTerm: string) => {
@@ -179,13 +223,9 @@ const ReservationManagementSystem: React.FC = () => {
     setIsClientLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}api/clientRM?clientname=${encodeURIComponent(searchTerm)}`);
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      if (!response.ok) throw new Error('Network response was not ok');
       
       const data = await response.json();
-      
       if (data.success && data.data) {
         setClientSearchResults(data.data);
         setShowClientDropdown(true);
@@ -210,13 +250,9 @@ const ReservationManagementSystem: React.FC = () => {
     setIsPropertyLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}api/Property?Address=${encodeURIComponent(searchTerm)}`);
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      if (!response.ok) throw new Error('Network response was not ok');
       
       const data = await response.json();
-      
       if (data.data && Array.isArray(data.data)) {
         setPropertySearchResults(data.data);
         setShowPropertyDropdown(true);
@@ -241,7 +277,6 @@ const ReservationManagementSystem: React.FC = () => {
         setShowClientDropdown(false);
       }
     }, 300);
-
     return () => clearTimeout(timer);
   }, [clientSearchTerm]);
 
@@ -254,7 +289,6 @@ const ReservationManagementSystem: React.FC = () => {
         setShowPropertyDropdown(false);
       }
     }, 300);
-
     return () => clearTimeout(timer);
   }, [propertySearchTerm]);
 
@@ -299,7 +333,7 @@ const ReservationManagementSystem: React.FC = () => {
 
   // Check room availability
   const checkAvailability = async () => {
-    if (!selectedProperty || !guestInfo.cid || !apartmentInfo.checkOutDate) {
+    if (!selectedProperty || !sharedCheckInDate || !sharedCheckOutDate) {
       alert('Please select property and fill check-in/check-out dates');
       return;
     }
@@ -310,37 +344,22 @@ const ReservationManagementSystem: React.FC = () => {
     }
 
     setShowAvailability(true);
-    console.log("checkRoomAvailability body:", {
-      propertyId: selectedProperty?.property_id,
-      checkInDate: guestInfo?.cid,
-      checkOutDate: apartmentInfo?.checkOutDate,
-      roomTypes: roomSelection
-    });
 
-    
     try {
       const response = await fetch(`${API_BASE_URL}api/checkRoomAvailability`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
- 
-
         body: JSON.stringify({
           propertyId: selectedProperty.property_id,
-          checkInDate: guestInfo.cid,
-          checkOutDate: apartmentInfo.checkOutDate,
+          checkInDate: sharedCheckInDate,
+          checkOutDate: sharedCheckOutDate,
           roomTypes: roomSelection
         })
       });
 
-      console.log(response);
-      
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
+      if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       
       if (data.success && data.availability) {
@@ -362,7 +381,6 @@ const ReservationManagementSystem: React.FC = () => {
 
   // Handle form submission
   const handleSave = async () => {
-    // Validate required fields
     if (!selectedClient) {
       alert('Please select a client');
       return;
@@ -402,10 +420,7 @@ const ReservationManagementSystem: React.FC = () => {
         body: JSON.stringify(reservationData)
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
+      if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       
       if (data.success) {
@@ -428,11 +443,18 @@ const ReservationManagementSystem: React.FC = () => {
     setShowAvailability(false);
     setRoomAvailability([]);
     setRoomSelection([]);
+    setSharedCheckInDate('');
+    setSharedCheckInTime('14:00');
+    setSharedCheckOutDate('');
+    setSharedCheckOutTime('11:00');
     setGuestInfo({
       companyName: '',
       guestName: '',
       guestEmail: '',
-      cid: '',
+      checkInDate: '',
+      checkInTime: '14:00',
+      checkOutDate: '',
+      checkOutTime: '11:00',
       contactNumber: '',
       baseRate: '',
       taxes: '',
@@ -440,8 +462,6 @@ const ReservationManagementSystem: React.FC = () => {
       paymentMode: '',
       tariffType: '',
       occupancy: '',
-      checkInTime: '12:00',
-      checkOutTime: '11:00',
       chargeableDays: '',
       adminEmail: ''
     });
@@ -456,13 +476,9 @@ const ReservationManagementSystem: React.FC = () => {
       hostTotalAmount: '',
       contactPerson: '',
       contactNumber: '',
-      checkInDate: '',
-      checkOutDate: '',
-      checkInTime: '12:00',
-      checkOutTime: '11:00',
-      chargeableDays: '',
       hostTariffType: '',
-      hostPaymentMethod: ''
+      hostPaymentMethod: '',
+      chargeableDays: ''
     });
     setPajasaInfo({
       comments: '',
@@ -648,30 +664,30 @@ const ReservationManagementSystem: React.FC = () => {
                 />
                 
                 <input 
-                  type="date" 
-                  placeholder="C.I.D"
+                  type="date"
+                  placeholder="Check In Date"
                   className="p-2 border border-gray-300 rounded"
-                  value={guestInfo.cid}
-                  onChange={(e) => setGuestInfo({...guestInfo, cid: e.target.value})}
+                  value={sharedCheckInDate}
+                  onChange={(e) => setSharedCheckInDate(e.target.value)}
                 />
                 <input 
-                  type="time" 
+                  type="time"
                   className="p-2 border border-gray-300 rounded"
-                  value={guestInfo.checkInTime}
-                  onChange={(e) => setGuestInfo({...guestInfo, checkInTime: e.target.value})}
+                  value={sharedCheckInTime}
+                  onChange={(e) => setSharedCheckInTime(e.target.value)}
                 />
                 <input 
-                  type="date" 
-                  placeholder="C.O.D"
+                  type="date"
+                  placeholder="Check Out Date"
                   className="p-2 border border-gray-300 rounded"
-                  value={apartmentInfo.checkOutDate}
-                  onChange={(e) => setApartmentInfo({...apartmentInfo, checkOutDate: e.target.value})}
+                  value={sharedCheckOutDate}
+                  onChange={(e) => setSharedCheckOutDate(e.target.value)}
                 />
                 <input 
-                  type="time" 
+                  type="time"
                   className="p-2 border border-gray-300 rounded"
-                  value={guestInfo.checkOutTime}
-                  onChange={(e) => setGuestInfo({...guestInfo, checkOutTime: e.target.value})}
+                  value={sharedCheckOutTime}
+                  onChange={(e) => setSharedCheckOutTime(e.target.value)}
                 />
                 
                 <input 
@@ -701,9 +717,9 @@ const ReservationManagementSystem: React.FC = () => {
                 <input 
                   type="text" 
                   placeholder="Chargeable Days"
-                  className="p-2 border border-gray-300 rounded"
+                  className="p-2 border border-gray-300 rounded bg-gray-100"
                   value={guestInfo.chargeableDays}
-                  onChange={(e) => setGuestInfo({...guestInfo, chargeableDays: e.target.value})}
+                  readOnly
                 />
                 
                 <input 
@@ -778,7 +794,7 @@ const ReservationManagementSystem: React.FC = () => {
                 <button 
                   onClick={checkAvailability}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded flex items-center space-x-2"
-                  disabled={!selectedProperty || !guestInfo.cid || !apartmentInfo.checkOutDate || roomSelection.length === 0}
+                  disabled={!selectedProperty || !sharedCheckInDate || !sharedCheckOutDate || roomSelection.length === 0}
                 >
                   <Check size={16} />
                   <span>Check Availability</span>
@@ -790,7 +806,6 @@ const ReservationManagementSystem: React.FC = () => {
                 <div className="mt-6 space-y-4">
                   <h4 className="font-medium">Room Availability Results:</h4>
                   
-                  {/* Availability Status */}
                   {roomAvailability.some(room => !room.isAvailable) ? (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center space-x-2">
                       <AlertCircle size={20} />
@@ -803,7 +818,6 @@ const ReservationManagementSystem: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Room Status List */}
                   <div className="grid grid-cols-3 gap-4">
                     {roomAvailability.map((room) => (
                       <div key={room.roomType} className={`p-3 border rounded ${room.isAvailable ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
@@ -815,7 +829,6 @@ const ReservationManagementSystem: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Conflicting Reservations Table */}
                   {roomAvailability.some(room => room.conflictingReservations && room.conflictingReservations.length > 0) && (
                     <div className="mt-6">
                       <h4 className="font-medium mb-2">Conflicting Reservations:</h4>
@@ -957,38 +970,38 @@ const ReservationManagementSystem: React.FC = () => {
                 />
 
                 <input 
-                  type="date" 
-                  placeholder="Apt Check In Date"
-                  className="p-2 border border-gray-300 rounded"
-                  value={apartmentInfo.checkInDate}
-                  onChange={(e) => setApartmentInfo({...apartmentInfo, checkInDate: e.target.value})}
+                  type="date"
+                  placeholder="Check In Date"
+                  className="p-2 border border-gray-300 rounded bg-gray-100"
+                  value={sharedCheckInDate}
+                  readOnly
                 />
                 <input 
-                  type="time" 
-                  className="p-2 border border-gray-300 rounded"
-                  value={apartmentInfo.checkInTime}
-                  onChange={(e) => setApartmentInfo({...apartmentInfo, checkInTime: e.target.value})}
+                  type="time"
+                  className="p-2 border border-gray-300 rounded bg-gray-100"
+                  value={sharedCheckInTime}
+                  readOnly
                 />
                 <input 
-                  type="date" 
-                  placeholder="Apt Check Out Date"
-                  className="p-2 border border-gray-300 rounded"
-                  value={apartmentInfo.checkOutDate}
-                  onChange={(e) => setApartmentInfo({...apartmentInfo, checkOutDate: e.target.value})}
+                  type="date"
+                  placeholder="Check Out Date"
+                  className="p-2 border border-gray-300 rounded bg-gray-100"
+                  value={sharedCheckOutDate}
+                  readOnly
                 />
                 <input 
-                  type="time" 
-                  className="p-2 border border-gray-300 rounded"
-                  value={apartmentInfo.checkOutTime}
-                  onChange={(e) => setApartmentInfo({...apartmentInfo, checkOutTime: e.target.value})}
+                  type="time"
+                  className="p-2 border border-gray-300 rounded bg-gray-100"
+                  value={sharedCheckOutTime}
+                  readOnly
                 />
 
                 <input 
                   type="text" 
                   placeholder="Apt Chargeable Days"
-                  className="p-2 border border-gray-300 rounded"
+                  className="p-2 border border-gray-300 rounded bg-gray-100"
                   value={apartmentInfo.chargeableDays}
-                  onChange={(e) => setApartmentInfo({...apartmentInfo, chargeableDays: e.target.value})}
+                  readOnly
                 />
               </div>
             </div>
@@ -1115,4 +1128,3 @@ const ReservationManagementSystem: React.FC = () => {
 };
 
 export default ReservationManagementSystem;
-
