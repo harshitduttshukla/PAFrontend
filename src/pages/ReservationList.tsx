@@ -430,6 +430,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Eye, Mail, FileText, User, Home, Calendar, XCircle, Settings, Loader2 } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // Types matching your database structure
 interface Reservation {
   id: number;
@@ -814,7 +816,7 @@ const ReservationList: React.FC = () => {
     const fetchReservations = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/getAllReservations'); // Update with your API endpoint
+        const response = await fetch(`${API_BASE_URL}api/getAllReservations`); // Update with your API endpoint
         
         if (!response.ok) {
           throw new Error('Failed to fetch reservations');
