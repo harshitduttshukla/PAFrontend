@@ -1,5 +1,3 @@
-
-
 type LableAndValueProp = {
     value : string | number;
     lable : string;

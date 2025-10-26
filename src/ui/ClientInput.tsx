@@ -1,6 +1,3 @@
-
-
-
 type clinetprop = {
     label : string;
     name : string;

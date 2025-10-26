@@ -1,8 +1,4 @@
-
-
-
 import React from "react";
-
 
 const FormTextarea: React.FC<{
   label: string;

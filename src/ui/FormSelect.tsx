@@ -1,8 +1,3 @@
-
-
-
-
-
 import React from "react";
 const FormSelect: React.FC<{
   label: string;

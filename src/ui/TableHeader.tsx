@@ -1,9 +1,5 @@
-
-
-
 const TableHeader = ({Columns }:any) => {
-
-    return (
+return (
         <thead className="bg-gray-50">
             <tr>
                 {
