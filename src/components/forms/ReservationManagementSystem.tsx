@@ -1460,7 +1460,7 @@ const ReservationManagementSystem: React.FC = () => {
     if (chargeableDays > 0 && baseRate > 0) {
       const taxAmount = (baseRate * taxesPercent) / 100;
       const totalPerDay = baseRate + taxAmount;
-      const totalTariff = (totalPerDay * chargeableDays).toFixed(2);
+      const totalTariff = (totalPerDay).toFixed(2);
       setGuestInfo(prev => ({
         ...prev,
         totalTariff: totalTariff
@@ -1477,7 +1477,7 @@ const ReservationManagementSystem: React.FC = () => {
     if (chargeableDays > 0 && hostBaseRate > 0) {
       const taxAmount = (hostBaseRate * hostTaxesPercent) / 100;
       const totalPerDay = hostBaseRate + taxAmount;
-      const hostTotalAmount = (totalPerDay * chargeableDays).toFixed(2);
+      const hostTotalAmount = (totalPerDay).toFixed(2);
       setApartmentInfo(prev => ({
         ...prev,
         hostTotalAmount: hostTotalAmount
@@ -2235,8 +2235,8 @@ const ReservationManagementSystem: React.FC = () => {
                   onChange={(e) => setApartmentInfo({...apartmentInfo, hostPaymentMethod: e.target.value})}
                 >
                   <option value="">Select Host Payment Method</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Bill to company">Bill to company</option>
+                  <option value="Direct payment">Direct payment</option>
                 </select>
 
                 <input 
