@@ -12,6 +12,7 @@ interface Reservation {
   guest_name: string;
   guest_email: string;
   contact_number: string;
+  contact_person_number:string;
   check_in_date: string;
   check_out_date: string;
   check_in_time: string;
@@ -166,7 +167,7 @@ const BookingHistoryModal: React.FC<BookingHistoryModalProps> = ({ isOpen, onClo
     { label: 'Property Address', value: `${booking.address1}, ${booking.address2}, ${booking.address3}`, highlight: true, fullWidth: true },
     { label: 'Landmark', value: booking.landmark || 'N/A' },
     { label: 'Contact Person', value: booking.contact_person || 'N/A', highlight: true },
-    { label: 'Contact Email', value: booking.email_id || 'N/A' },
+    { label: 'Contact Number', value: booking.contact_person_number|| 'N/A' },
     { label: 'Caretaker Name', value: booking.caretaker_name || 'N/A' },
     { label: 'Caretaker Number', value: booking.caretaker_number || 'N/A', highlight: true },
     { label: 'GST Number', value: booking.gst_no || 'N/A' },
@@ -317,7 +318,8 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
                       onClick={() => setShowOptions(showOptions === reservation.id ? null : reservation.id)}
                     >
                       <Settings size={16} />
-                      <span>Options</span>
+
+                      <span>${reservation.id} Options</span>
                     </button>
                     
                     <OptionsDropdown
@@ -335,6 +337,9 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
     </div>
   );
 };
+
+
+
 
 // Pagination Component
 interface PaginationProps {
@@ -368,6 +373,8 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
     </div>
   );
 };
+
+
 
 // Main Component
 const ReservationList: React.FC = () => {
@@ -521,3 +528,6 @@ const ReservationList: React.FC = () => {
 };
 
 export default ReservationList;
+
+
+
