@@ -225,17 +225,7 @@ const PropertyDashboard = () => {
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Reservation Records</h1>
-          <div className="flex space-x-2">
-            <button className="text-blue-600 hover:text-blue-700 transition-colors">Property Form</button>
-            <button className="text-blue-600 hover:text-blue-700 transition-colors">Properties View</button>
-            <button className="text-blue-600 hover:text-blue-700 transition-colors">Add Properties Price</button>
-            <button className="text-blue-600 hover:text-blue-700 transition-colors">Reservation Form</button>
-            <button className="text-blue-600 hover:text-blue-700 transition-colors">Reservation Records</button>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors">
-              <Plus className="w-4 h-4" />
-              <span>New</span>
-            </button>
-          </div>
+          
         </div>
 
         {/* Error Display */}

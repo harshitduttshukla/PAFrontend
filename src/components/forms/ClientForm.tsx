@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, X, User, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import ClientInput from '../../ui/ClientInput';
 
 
@@ -119,22 +119,8 @@ const ClientForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-blue-600 text-white shadow-lg">
-        <div className="flex items-center justify-between px-4 py-3">
-        
-          
-          <div className="flex items-center space-x-4">
-            <HelpCircle className="h-5 w-5 hover:text-blue-200 cursor-pointer" />
-            <Settings className="h-5 w-5 hover:text-blue-200 cursor-pointer" />
-            <div className="flex items-center space-x-2">
-              <User className="h-5 w-5" />
-              <span>Paras</span>
-            </div>
-            <LogOut className="h-5 w-5 hover:text-blue-200 cursor-pointer" />
-          </div>
-        </div>
-      </header>
+     
+      
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">

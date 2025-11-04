@@ -25,7 +25,7 @@ function App() {
           <Route path="/ClientLast" element={<ClientLast />} />
           <Route path="/ReservationManagementSystem" element={<ReservationManagementSystem />} />
           <Route path="/ReservationList" element={<ReservationList />} />
-        </Route> 
+        </Route>
       </Routes>
     </BrowserRouter>
   );
