@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import TableHeader from '../ui/TableHeader'
 import Tablebody from '../ui/Tablebody'
 import LableAndValue from '../ui/LableAndValue'
-import { ChevronDown, Search, Plus, Edit, Eye, Trash2, X } from 'lucide-react';
+import { ChevronDown, Search, Edit, Eye, Trash2, X } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
