@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import TableControls from './Reservationpage/TableControls';
 import { Reservation } from '../types/Reservation';
 import Pagination from './Reservationpage/Pagination';
-import BookingHistoryModal from './Reservationpage/BookingHistory';
+import OnFullView from './Reservationpage/OnFullView';
 import GuestViewModal from './Reservationpage/GuestView';
 import ApartmentViewModal from './Reservationpage/ApartmentView';
 import ReservationsTable from './Reservationpage/ReservationsTable';
@@ -335,7 +335,7 @@ const ReservationList: React.FC = () => {
           setShowOptions={setShowOptions}
           onGuestView={handleGuestView}
           onApartmentView={handleApartmentView}
-          onBookingHistory={handleBookingHistory}
+          onFullView={handleBookingHistory}
           onGuestPDF={handleGuestPDF}
           onApartmentPDF={handleApartmentPDF}
           onCancelBooking={handleCancelBookingClick}
@@ -364,7 +364,7 @@ const ReservationList: React.FC = () => {
         onDownloadPDF={() => selectedBooking && downloadApartmentPDF(selectedBooking)}
       />
 
-      <BookingHistoryModal
+      <OnFullView
         isOpen={showBookingHistory}
         onClose={() => setShowBookingHistory(false)}
         booking={selectedBooking}

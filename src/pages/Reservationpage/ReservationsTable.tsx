@@ -9,7 +9,7 @@ interface ReservationsTableProps {
   setShowOptions: (id: number | null) => void;
   onGuestView: (booking: Reservation) => void;
   onApartmentView: (booking: Reservation) => void;
-  onBookingHistory: (booking: Reservation) => void;
+  onFullView: (booking: Reservation) => void;
   onGuestPDF: (booking: Reservation) => void;
   onApartmentPDF: (booking: Reservation) => void;
   onCancelBooking: (booking: Reservation) => void;
@@ -21,7 +21,7 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
   setShowOptions,
   onGuestView,
   onApartmentView,
-  onBookingHistory,
+  onFullView,
   onGuestPDF,
   onApartmentPDF,
    onCancelBooking
@@ -86,7 +86,7 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
                         onClose={() => setShowOptions(null)}
                         onGuestView={() => onGuestView(reservation)}
                         onApartmentView={() => onApartmentView(reservation)}
-                        onBookingHistory={() => onBookingHistory(reservation)}
+                        onFullView={() => onFullView(reservation)}
                         onGuestPDF={() => onGuestPDF(reservation)}
                         onApartmentPDF={() => onApartmentPDF(reservation)}
                         onCancelBooking={() => onCancelBooking(reservation)}

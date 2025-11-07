@@ -8,7 +8,7 @@ interface OptionsDropdownProps {
   onClose: () => void;
   onGuestView: () => void;
   onApartmentView: () => void;
-  onBookingHistory: () => void;
+  onFullView: () => void;
   onGuestPDF: () => void;
   onApartmentPDF: () => void;
   onCancelBooking:()=>void;
@@ -20,7 +20,7 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
   onClose, 
   onGuestView,
   onApartmentView,
-  onBookingHistory,
+  onFullView,
   onGuestPDF,
   onApartmentPDF,
   onCancelBooking,
@@ -31,7 +31,7 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
   const menuItems = [
     { icon: User, label: 'Guest View', onClick: onGuestView },
     { icon: Home, label: 'Apartment View', onClick: onApartmentView },
-    { icon: Eye, label: 'View', onClick: onBookingHistory },
+    { icon: Eye, label: 'View', onClick: onFullView },
     { icon: Calendar, label: 'Booking History'},
     { icon: FileText, label: 'Edit' },
     { icon: Mail, label: 'Send Email' },
