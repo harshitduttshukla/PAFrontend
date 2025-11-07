@@ -958,12 +958,10 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import TableControls from './Reservationpage/TableControls';
 import { Reservation } from '../types/Reservation';
-
 import Pagination from './Reservationpage/Pagination';
 import BookingHistoryModal from './Reservationpage/BookingHistory';
 import GuestViewModal from './Reservationpage/GuestView';
 import ApartmentViewModal from './Reservationpage/ApartmentView';
-
 import ReservationsTable from './Reservationpage/ReservationsTable';
 
 
