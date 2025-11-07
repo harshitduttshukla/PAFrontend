@@ -12,6 +12,7 @@ interface ReservationsTableProps {
   onBookingHistory: (booking: Reservation) => void;
   onGuestPDF: (booking: Reservation) => void;
   onApartmentPDF: (booking: Reservation) => void;
+  onCancelBooking: (booking: Reservation) => void;
 }
 
 const ReservationsTable: React.FC<ReservationsTableProps> = ({
@@ -22,7 +23,8 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
   onApartmentView,
   onBookingHistory,
   onGuestPDF,
-  onApartmentPDF
+  onApartmentPDF,
+   onCancelBooking
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -87,6 +89,7 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
                         onBookingHistory={() => onBookingHistory(reservation)}
                         onGuestPDF={() => onGuestPDF(reservation)}
                         onApartmentPDF={() => onApartmentPDF(reservation)}
+                        onCancelBooking={() => onCancelBooking(reservation)}
                         booking={reservation}
                       />
                     )}
