@@ -13,6 +13,8 @@ interface ReservationsTableProps {
   onGuestPDF: (booking: Reservation) => void;
   onApartmentPDF: (booking: Reservation) => void;
   onCancelBooking: (booking: Reservation) => void;
+  onSendEmail: (booking: Reservation) => void;
+  isSendingEmail?: boolean;
 }
 
 const ReservationsTable: React.FC<ReservationsTableProps> = ({
@@ -24,7 +26,9 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
   onFullView,
   onGuestPDF,
   onApartmentPDF,
-   onCancelBooking
+  onCancelBooking,
+  onSendEmail,
+  isSendingEmail
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -82,7 +86,7 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
                     
                     {showOptions === reservation.id && (
                       <OptionsDropdown
-                      isOpen={showOptions === reservation.id}
+                        isOpen={showOptions === reservation.id}
                         onClose={() => setShowOptions(null)}
                         onGuestView={() => onGuestView(reservation)}
                         onApartmentView={() => onApartmentView(reservation)}
@@ -90,7 +94,9 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
                         onGuestPDF={() => onGuestPDF(reservation)}
                         onApartmentPDF={() => onApartmentPDF(reservation)}
                         onCancelBooking={() => onCancelBooking(reservation)}
+                        onSendEmail={()=>onSendEmail(reservation)}
                         booking={reservation}
+                        isSendingEmail={isSendingEmail}
                       />
                     )}
                   </td>

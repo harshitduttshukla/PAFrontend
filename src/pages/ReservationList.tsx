@@ -27,8 +27,76 @@ const ReservationList: React.FC = () => {
   const [entriesPerPage, setEntriesPerPage] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
-   const [showCancelBooking, setShowCancelBooking] = useState<boolean>(false);
+  const [showCancelBooking, setShowCancelBooking] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
+  const [isSendingEmail,setIsSendingEmail] = useState<boolean>(false);
+
+
+    // Send Email Function - Directly with reservation data
+  const handleSendEmail = async (booking: Reservation) => {
+    try {
+      setIsSendingEmail(true);
+      
+      // Prepare email data from reservation
+      const emailData = {
+        apartmentemail: booking.guest_email || '',
+        subject: 'Booking Confirmation',
+        apartmentname: booking.property_type || '',
+        contactperson: booking.contact_person || '',
+        contactnumber: booking.contact_person_number || '',
+        guestname: booking.guest_name || '',
+        contactnumberguest: booking.contact_number || '',
+        checkin: booking.check_in_date || '',
+        checkout: booking.check_out_date || '',
+        chargeabledays: booking.chargeable_days?.toString() || '',
+        amount: `¥${booking.total_amount || '0'}`,
+        modeofpayment: 'Online', // Default or from booking if available
+        guesttype: booking.client_name || 'Corporate',
+        roomtype: booking.room_type || '',
+        occupancy: `${booking.occupancy} Person(s)`,
+        inclusions: 'Complimentary breakfast, Wi-Fi, and housekeeping' // Default inclusions
+      };
+
+      console.log('Sending email with data:', emailData);
+
+      const response = await fetch(`${API_BASE_URL}api/sendemail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Show success message
+        alert(`Email sent successfully to ${booking.guest_name}!`);
+      } else {
+        throw new Error(result.message || 'Failed to send email');
+      }
+    } catch (err) {
+      console.error('Error sending email:', err);
+      alert('Failed to send email. Please try again.');
+    } finally {
+      setIsSendingEmail(false);
+      setShowOptions(null);
+    }
+  };
+
+  // Handle Send Email Click - Direct call
+  const handleSendEmailClick = (booking: Reservation): void => {
+    handleSendEmail(booking);
+  };
+
+  // Handle Resend Email Click - Same as send for now
+  // const handleResendEmailClick = (booking: Reservation): void => {
+  //   handleSendEmail(booking);
+  // };
 
   // Cancel Booking Function
   const handleCancelBooking = async (bookingId: number) => {
@@ -339,6 +407,8 @@ const ReservationList: React.FC = () => {
           onGuestPDF={handleGuestPDF}
           onApartmentPDF={handleApartmentPDF}
           onCancelBooking={handleCancelBookingClick}
+          onSendEmail={handleSendEmailClick}
+          isSendingEmail={isSendingEmail}
         />
 
         {totalPages > 1 && (

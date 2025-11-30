@@ -15,6 +15,7 @@ const menuItems: MenuItem[] = [
   { label: "Client Last", path: "/ClientLast" },
   { label: "Reservation Management", path: "/ReservationManagementSystem" },
   { label: "Reservation List", path: "/ReservationList" },
+  { label: "Invoice Form", path: "/InvoiceForm" },
   
 
 ];

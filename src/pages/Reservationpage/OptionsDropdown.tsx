@@ -12,7 +12,9 @@ interface OptionsDropdownProps {
   onGuestPDF: () => void;
   onApartmentPDF: () => void;
   onCancelBooking:()=>void;
+  onSendEmail:()=>void;
   booking: Reservation;
+   isSendingEmail?: boolean;
 }
 
 const OptionsDropdown: React.FC<OptionsDropdownProps> = ({ 
@@ -24,6 +26,8 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
   onGuestPDF,
   onApartmentPDF,
   onCancelBooking,
+  onSendEmail,
+  isSendingEmail = false
   
 }) => {
   if (!isOpen) return null;
@@ -34,7 +38,13 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
     { icon: Eye, label: 'View', onClick: onFullView },
     { icon: Calendar, label: 'Booking History'},
     { icon: FileText, label: 'Edit' },
-    { icon: Mail, label: 'Send Email' },
+
+    { icon: Mail,
+      label:  isSendingEmail ? 'Sending...' : 'Send Email',
+      onClick: onSendEmail,
+      disabled: isSendingEmail
+    },
+
     { icon: Mail, label: 'Resend Email' },
     { icon: Download, label: 'Guest PDF', onClick: onGuestPDF },
     { icon: Download, label: 'Apartment PDF', onClick: onApartmentPDF },
