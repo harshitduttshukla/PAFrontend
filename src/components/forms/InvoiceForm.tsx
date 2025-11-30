@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
-import { Calendar, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Search } from 'lucide-react';
+import { Reservation } from '../../types/Reservation';
+import ReservationPicker from '../ReservationPicker';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface FormData {
   stateForBilling: string;
@@ -23,6 +27,12 @@ interface FormData {
   conversionRate: string;
 }
 
+interface CompanyInfo {
+  name: string;
+  address: string;
+  email: string;
+}
+
 const InvoiceForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     stateForBilling: 'Maharashtra',
@@ -30,7 +40,7 @@ const InvoiceForm: React.FC = () => {
     extraServices: 'No',
     servicesName: '',
     servicesAmount: '0.00',
-    date: '08/13/2022',
+    date: new Date().toLocaleDateString(),
     pan: '',
     roundOffValue: '',
     guestNameWidth: '18.00',
@@ -42,22 +52,127 @@ const InvoiceForm: React.FC = () => {
     pageBreak: '5',
     displayTaxes: 'SGST & CGST',
     apartmentBillNo: '',
-    currency: '',
-    conversionRate: '0.0000'
+    currency: 'INR',
+    conversionRate: '1.0000'
+  });
+
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
+    name: 'Snowfax Technologies Pvt Ltd, Bhiwandi, Thana District',
+    address: 'Floor, A/7, Gala No. 1,2,3,27,28,29,\nPooja Market, Anjur Phata,\nThana District, Maharashtra, 421302',
+    email: 'hello@snowfax.in'
   });
 
   const [lineItems, setLineItems] = useState([
     { location: '', foodTariff: '', gstId: '', cgstId: '', days: '', tariff: '', tax: '', sgst: '', cgst: '', igst: '', total: '' }
   ]);
 
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loadingReservations, setLoadingReservations] = useState<boolean>(false);
+  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        setLoadingReservations(true);
+        const response = await fetch(`${API_BASE_URL}api/getAllReservations`);
+        if (response.ok) {
+          const result = await response.json();
+          setReservations(result.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reservations", error);
+      } finally {
+        setLoadingReservations(false);
+      }
+    };
+    fetchReservations();
+  }, []);
+
+  const handleReservationSelect = (reservation: Reservation) => {
+    setFormData(prev => ({
+      ...prev,
+      invoiceTo: reservation.guest_name || reservation.client_name || '',
+      date: reservation.check_in_date ? new Date(reservation.check_in_date).toLocaleDateString() : prev.date,
+      apartmentBillNo: reservation.reservation_no || '',
+      stateForBilling: reservation.state || prev.stateForBilling,
+    }));
+
+    // Construct address from reservation details
+    const addressParts = [
+      reservation.address1,
+      reservation.address2,
+      reservation.address3,
+      reservation.city,
+      reservation.state,
+      reservation.zip_code
+    ].filter(Boolean);
+
+    setCompanyInfo({
+      name: reservation.client_name || 'Snowfax Technologies Pvt Ltd',
+      address: addressParts.length > 0 ? addressParts.join(', ') : 'Address not available',
+      email: reservation.email_id || 'hello@snowfax.in'
+    });
+
+    setLineItems([{
+      location: reservation.location || reservation.city || '',
+      foodTariff: '0',
+      gstId: '0',
+      cgstId: '0',
+      days: reservation.chargeable_days?.toString() || '0',
+      tariff: reservation.base_rate || '0',
+      tax: reservation.taxes || '0',
+      sgst: '',
+      cgst: '',
+      igst: '',
+      total: reservation.total_tariff || '0'
+    }]);
+
+    setIsPickerOpen(false);
+  };
+
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Calculate Totals
+  const calculateTotals = () => {
+    let totalWithoutGST = 0;
+    let totalTax = 0;
+    let totalWithGST = 0;
+
+    lineItems.forEach(item => {
+      const tariff = parseFloat(item.tariff) || 0;
+      totalWithoutGST += tariff;
+      totalTax += parseFloat(item.tax) || 0;
+      totalWithGST += parseFloat(item.total) || 0;
+    });
+
+    let sgst = 0;
+    let cgst = 0;
+    let igst = 0;
+
+    if (formData.displayTaxes === 'SGST & CGST') {
+      sgst = totalTax / 2;
+      cgst = totalTax / 2;
+    } else {
+      igst = totalTax;
+    }
+
+    return {
+      totalWithoutGST: totalWithoutGST.toFixed(2),
+      sgst: sgst.toFixed(2),
+      cgst: cgst.toFixed(2),
+      igst: igst.toFixed(2),
+      totalWithGST: totalWithGST.toFixed(2)
+    };
+  };
+
+  const totals = calculateTotals();
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-     
+
       {/* Success Message */}
       <div className="bg-green-100 text-green-800 px-6 py-3 border-b border-green-200">
         Successfully created
@@ -68,15 +183,35 @@ const InvoiceForm: React.FC = () => {
         {/* Company Info */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h1 className="text-2xl font-semibold text-blue-600 mb-2">
-            Snowfax Technologies Pvt Ltd, Bhiwandi, Thana District
+            {companyInfo.name}
           </h1>
-          <p className="text-gray-600 text-sm">
-            Floor, A/7, Gala No. 1,2,3,27,28,29,<br />
-            Pooja Market, Anjur Phata,<br />
-            Thana District, Maharashtra, 421302
+          <p className="text-gray-600 text-sm whitespace-pre-line">
+            {companyInfo.address}
           </p>
-          <p className="text-gray-600 text-sm mt-2">hello@snowfax.in</p>
+          <p className="text-gray-600 text-sm mt-2">{companyInfo.email}</p>
         </div>
+
+        {/* Reservation Selector */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Select Reservation to Populate Invoice
+          </label>
+          <button
+            onClick={() => setIsPickerOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            disabled={loadingReservations}
+          >
+            <Search size={18} />
+            {loadingReservations ? 'Loading Reservations...' : 'Select Reservation'}
+          </button>
+        </div>
+
+        <ReservationPicker
+          reservations={reservations}
+          isOpen={isPickerOpen}
+          onClose={() => setIsPickerOpen(false)}
+          onSelect={handleReservationSelect}
+        />
 
         {/* Form Grid */}
         <div className="grid grid-cols-2 gap-6 mb-6">
@@ -265,9 +400,6 @@ const InvoiceForm: React.FC = () => {
                 Invoice To
               </label>
               <input
-
-
-
                 type="text"
                 value={formData.invoiceTo}
                 onChange={(e) => handleInputChange('invoiceTo', e.target.value)}
@@ -358,39 +490,61 @@ const InvoiceForm: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
-                <td className="px-3 py-2">
-                  <input type="text" className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
-                </td>
-                <td className="px-3 py-2">
-                  <select className="w-full border border-gray-300 rounded px-2 py-1 text-sm">
-                    <option>Food Tariff</option>
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <select className="w-full border border-gray-300 rounded px-2 py-1 text-sm">
-                    <option>Food Tax</option>
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <select className="w-full border border-gray-300 rounded px-2 py-1 text-sm">
-                    <option>C.G.I.D</option>
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <input type="text" className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
-                </td>
-                <td className="px-3 py-2">
-                  <input type="text" className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
-                </td>
-                <td className="px-3 py-2">
-                  <input type="text" className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
-                </td>
-                <td className="px-3 py-2 text-sm">SGST</td>
-                <td className="px-3 py-2 text-sm">CGST</td>
-                <td className="px-3 py-2 text-sm">IGST</td>
-                <td className="px-3 py-2 text-sm">Total</td>
-              </tr>
+              {lineItems.map((item, index) => (
+                <tr key={index} className="border-b">
+                  <td className="px-3 py-2">
+                    <input
+                      type="text"
+                      value={item.location}
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                      readOnly
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                      <option>Food Tariff</option>
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                      <option>Food Tax</option>
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                      <option>C.G.I.D</option>
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      type="text"
+                      value={item.days}
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                      readOnly
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      type="text"
+                      value={item.tariff}
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                      readOnly
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      type="text"
+                      value={item.tax}
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                      readOnly
+                    />
+                  </td>
+                  <td className="px-3 py-2 text-sm">SGST</td>
+                  <td className="px-3 py-2 text-sm">CGST</td>
+                  <td className="px-3 py-2 text-sm">IGST</td>
+                  <td className="px-3 py-2 text-sm">{item.total}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
           <div className="p-4">
@@ -409,23 +563,23 @@ const InvoiceForm: React.FC = () => {
           <div className="max-w-md ml-auto space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-gray-700">Total Amount without GST</span>
-              <span className="font-semibold">₹0.00</span>
+              <span className="font-semibold">₹{totals.totalWithoutGST}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-700">SGST</span>
-              <span className="font-semibold">₹0.00</span>
+              <span className="font-semibold">₹{totals.sgst}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-700">CGST</span>
-              <span className="font-semibold">₹0.00</span>
+              <span className="font-semibold">₹{totals.cgst}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-700">IGST</span>
-              <span className="font-semibold">₹0.00</span>
+              <span className="font-semibold">₹{totals.igst}</span>
             </div>
             <div className="flex justify-between text-base font-semibold pt-3 border-t">
               <span>Total Amount with GST</span>
-              <span>₹0.00</span>
+              <span>₹{totals.totalWithGST}</span>
             </div>
           </div>
         </div>
