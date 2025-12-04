@@ -9,6 +9,8 @@ import HostList from './pages/HostLast'
 import PropertyLast from './pages/PropertyLast'
 import ClientLast from './pages/ClientLast'
 import ReservationList from './pages/ReservationList'
+import Invoicepage from './pages/invoicepage'
+
 import Layout from './Layout';
 
 
@@ -27,6 +29,7 @@ function App() {
           <Route path="/ReservationManagementSystem" element={<ReservationManagementSystem />} />
           <Route path="/ReservationList" element={<ReservationList />} />
           <Route path="/InvoiceForm" element={<InvoiceForm />} />
+          <Route path="/Invoicepage" element={<Invoicepage />} />
         </Route>
       </Routes>
     </BrowserRouter>

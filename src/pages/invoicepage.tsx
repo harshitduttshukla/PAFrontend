@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronDown, Settings, HelpCircle, User, LogOut, ChevronLeft, ChevronsLeft, ChevronRight, ChevronsRight, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, ChevronLeft, ChevronsLeft, ChevronRight, ChevronsRight, Plus } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -10,74 +10,38 @@ interface Invoice {
   amount: string;
 }
 
-const InvoiceDashboard: React.FC = () => {
+const Invoicepage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const invoices: Invoice[] = [
-    { id: '1', status: 'Draft', pai: 'PAI22060517', created: '06 Jun, 2022', clientName: 'Shadowfax Technologies Pvt Ltd, Bhiwandi, Thana District', amount: '₹31,360.00' },
-    { id: '2', status: 'Draft', pai: 'PAI22060516', created: '06 Jun, 2022', clientName: 'Northern Arc Capital Limited', amount: '₹10,752.00' },
-    { id: '3', status: 'Draft', pai: 'PAI22060515', created: '06 Jun, 2022', clientName: 'Northern Arc Capital Limited', amount: '₹75,264.00' },
-    { id: '4', status: 'Draft', pai: 'PAI22060514', created: '05 Jun, 2022', clientName: 'M MOSER DESIGN ASSOCIATES INDIA PVT LTD, Mumabi', amount: '₹19,600.00' },
-    { id: '5', status: 'Draft', pai: 'PAI22060513', created: '02 Jun, 2022', clientName: 'Shadowfax Technologies Pvt Ltd, Bhiwandi, Thana District', amount: '₹167,440.00' },
-    { id: '6', status: 'Draft', pai: 'PAI22050512', created: '30 May, 2022', clientName: 'Hindon India Pvt. Ltd., Delhi', amount: '₹11,200.00' },
-    { id: '7', status: 'Draft', pai: 'PAI22050511', created: '30 May, 2022', clientName: 'M MOSER DESIGN ASSOCIATES INDIA PVT LTD, Mumabi', amount: '₹23,520.00' },
-    { id: '8', status: 'Draft', pai: 'PAI22050510', created: '23 May, 2022', clientName: 'Intertrustvietos Corporate & Fund Services Pvt Ltd, Mumbai', amount: '₹31,360.00' },
-    { id: '9', status: 'Draft', pai: 'PAI22050509', created: '23 May, 2022', clientName: 'Elegance Enterprises', amount: '₹19,600.00' },
-    { id: '10', status: 'Draft', pai: 'PAI22050508', created: '20 May, 2022', clientName: 'M MOSER DESIGN ASSOCIATES INDIA PVT LTD, Mumabi', amount: '₹15,680.00' },
-    { id: '11', status: 'Draft', pai: 'PAI22050507', created: '19 May, 2022', clientName: 'Northern Arc Capital Limited', amount: '₹10,752.00' },
-    { id: '12', status: 'Draft', pai: 'PAI22050506', created: '07 May, 2022', clientName: 'Northern Arc Capital Limited', amount: '₹25,088.00' },
-  ];
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const tabs = ['All', 'Draft', 'Sent', 'Viewed', 'Paid', 'Overdue'];
 
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}api/getAllInvoices`);
+        if (response.ok) {
+          const result = await response.json();
+          const mappedInvoices = result.data.map((inv: any) => ({
+            id: inv.id,
+            status: inv.status,
+            pai: inv.invoice_number,
+            created: new Date(inv.invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            clientName: inv.invoice_to,
+            amount: `₹${inv.grand_total}`
+          }));
+          setInvoices(mappedInvoices);
+        }
+      } catch (error) {
+        console.error("Failed to fetch invoices", error);
+      }
+    };
+    fetchInvoices();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-gray-800 text-white px-6 py-3">
-        <div className="flex items-center justify-between">
-          <nav className="flex items-center space-x-8">
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-medium">Dashboard</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-medium">Clients</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-medium">Invoices</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-medium">Property & Reservation</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-medium">Apartment Bills</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-medium">Reports</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-          </nav>
-          
-          <div className="flex items-center space-x-4">
-            <input
-              type="text"
-              placeholder="Filter Invoices"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white text-gray-800 px-4 py-1.5 rounded border-none outline-none w-64"
-            />
-            <HelpCircle className="w-5 h-5 cursor-pointer" />
-            <Settings className="w-5 h-5 cursor-pointer" />
-            <User className="w-5 h-5 cursor-pointer" />
-            <LogOut className="w-5 h-5 cursor-pointer" />
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
       <div className="px-6 py-6">
@@ -90,17 +54,16 @@ const InvoiceDashboard: React.FC = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
-                    activeTab === tab
+                  className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${activeTab === tab
                       ? 'bg-blue-500 text-white'
                       : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
               ))}
             </div>
-            
+
             <div className="flex items-center space-x-1 bg-white border rounded">
               <button className="p-2 hover:bg-gray-100">
                 <ChevronsLeft className="w-4 h-4 text-gray-600" />
@@ -115,7 +78,7 @@ const InvoiceDashboard: React.FC = () => {
                 <ChevronsRight className="w-4 h-4 text-gray-600" />
               </button>
             </div>
-            
+
             <button className="bg-blue-500 text-white px-4 py-2 rounded flex items-center space-x-2 hover:bg-blue-600 transition-colors">
               <Plus className="w-4 h-4" />
               <span className="font-medium">New</span>
@@ -173,4 +136,4 @@ const InvoiceDashboard: React.FC = () => {
   );
 };
 
-export default InvoiceDashboard;
+export default Invoicepage;
