@@ -14,6 +14,7 @@ interface ReservationsTableProps {
   onApartmentPDF: (booking: Reservation) => void;
   onCancelBooking: (booking: Reservation) => void;
   onSendEmail: (booking: Reservation) => void;
+  onEdit: (booking: Reservation) => void;
   isSendingEmail?: boolean;
 }
 
@@ -28,6 +29,7 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
   onApartmentPDF,
   onCancelBooking,
   onSendEmail,
+  onEdit,
   isSendingEmail
 }) => {
   const formatDate = (dateString: string) => {
@@ -76,14 +78,14 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
                   <td className="px-4 py-3">{reservation.client_name}</td>
                   <td className="px-4 py-3">{reservation.city}, {reservation.location}</td>
                   <td className="px-4 py-3 relative">
-                    <button 
+                    <button
                       className="text-blue-600 hover:text-blue-800 flex items-center space-x-1 transition-colors"
                       onClick={() => setShowOptions(showOptions === reservation.id ? null : reservation.id)}
                     >
                       <Settings size={16} />
                       <span>Options</span>
                     </button>
-                    
+
                     {showOptions === reservation.id && (
                       <OptionsDropdown
                         isOpen={showOptions === reservation.id}
@@ -94,7 +96,8 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
                         onGuestPDF={() => onGuestPDF(reservation)}
                         onApartmentPDF={() => onApartmentPDF(reservation)}
                         onCancelBooking={() => onCancelBooking(reservation)}
-                        onSendEmail={()=>onSendEmail(reservation)}
+                        onSendEmail={() => onSendEmail(reservation)}
+                        onEdit={() => onEdit(reservation)}
                         booking={reservation}
                         isSendingEmail={isSendingEmail}
                       />
@@ -109,4 +112,5 @@ const ReservationsTable: React.FC<ReservationsTableProps> = ({
     </div>
   );
 };
-  export default ReservationsTable
+
+export default ReservationsTable;

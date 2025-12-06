@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, Eye, Edit, FileText, Receipt, Trash2, MoreVertical } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight,
+  Plus, MoreVertical, Eye, Edit, FileText, Receipt, Trash2
+} from 'lucide-react';
+import ClientViewModal from '../components/ClientViewModal';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface Client {
   id: number;
@@ -22,28 +27,33 @@ interface Client {
   updated_at: string;
 }
 
+const buttonclass = "p-1 rounded-md hover:bg-gray-100 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed";
+const thclassName = "px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider";
+
 const ClientLast: React.FC = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<'active' | 'inactive' | 'all'>('active');
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   // Fetch clients from API
   const fetchClients = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Replace this URL with your actual API endpoint
-      const response = await fetch(`${API_BASE_URL}api/clients`); // Adjust this to your API endpoint
-      
+
+      const response = await fetch(`${API_BASE_URL}api/clients`);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         setClients(result.data);
       } else {
@@ -54,10 +64,10 @@ const ClientLast: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Failed to fetch clients');
       // Fallback to mock data for demonstration
       setClients([
-        { 
-          id: 1, 
-          client_name: "Demo Client 1", 
-          email_address: "demo1@example.com", 
+        {
+          id: 1,
+          client_name: "Demo Client 1",
+          email_address: "demo1@example.com",
           phone_number: "123-456-7890",
           mobile_number: "987-654-3210",
           active: true,
@@ -90,7 +100,7 @@ const ClientLast: React.FC = () => {
       }
 
       const result = await response.json();
-      
+
       if (result.message) {
         // Remove client from state
         setClients(prevClients => prevClients.filter(client => client.id !== clientId));
@@ -124,11 +134,11 @@ const ClientLast: React.FC = () => {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         // Update client in state
-        setClients(prevClients => 
-          prevClients.map(client => 
+        setClients(prevClients =>
+          prevClients.map(client =>
             client.id === clientId ? { ...client, active } : client
           )
         );
@@ -144,53 +154,44 @@ const ClientLast: React.FC = () => {
     fetchClients();
   }, []);
 
+  const toggleDropdown = (id: number) => {
+    setDropdownOpen(dropdownOpen === id ? null : id);
+  };
+
+  const handleMenuAction = (action: string, id: number, client: Client) => {
+    setDropdownOpen(null);
+    switch (action) {
+      case 'view':
+        setSelectedClient(client);
+        setIsViewModalOpen(true);
+        break;
+      case 'edit':
+        navigate('/ClientForm', { state: { client } });
+        break;
+      case 'toggle-status':
+        updateClientStatus(id, !client.active);
+        break;
+      case 'delete':
+        if (window.confirm('Are you sure you want to delete this client?')) {
+          deleteClient(id);
+        }
+        break;
+      case 'quote':
+        console.log('Create quote for', id);
+        break;
+      case 'invoice':
+        console.log('Create invoice for', id);
+        break;
+      default:
+        break;
+    }
+  };
+
   const filteredClients = clients.filter(client => {
     if (activeFilter === 'active') return client.active;
     if (activeFilter === 'inactive') return !client.active;
     return true;
   });
-
-  const toggleDropdown = (clientId: number) => {
-    setDropdownOpen(dropdownOpen === clientId ? null : clientId);
-  };
-
-  const handleMenuAction = (action: string, clientId: number, client: Client) => {
-    console.log(`${action} action for client ${clientId}`);
-    
-    switch (action) {
-      case 'view':
-        // Navigate to client view page or show modal
-        console.log('Viewing client:', client);
-        break;
-      case 'edit':
-        // Navigate to client edit page or show modal
-        console.log('Editing client:', client);
-        break;
-      case 'quote':
-        // Navigate to create quote page
-        console.log('Creating quote for client:', client);
-        break;
-      case 'invoice':
-        // Navigate to create invoice page
-        console.log('Creating invoice for client:', client);
-        break;
-      case 'delete':
-        if (window.confirm(`Are you sure you want to delete ${client.client_name}?`)) {
-          deleteClient(clientId);
-        }
-        break;
-      case 'toggle-status':
-        updateClientStatus(clientId, !client.active);
-        break;
-      default:
-        break;
-    }
-    
-    setDropdownOpen(null);
-  };
-
-  const buttonclass = "p-2 text-gray-400 hover:text-gray-600 transition-colors";
-  const thclassName = "text-left py-3 px-4 font-medium text-gray-700 text-sm";
 
   if (loading) {
     return (
@@ -223,58 +224,55 @@ const ClientLast: React.FC = () => {
               <div className="flex items-center bg-gray-100 rounded-md">
                 <button
                   onClick={() => setActiveFilter('active')}
-                  className={`px-4 py-2 text-sm font-medium rounded-l-md transition-colors ${
-                    activeFilter === 'active'
-                      ? 'bg-blue-500 text-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium rounded-l-md transition-colors ${activeFilter === 'active'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   Active ({clients.filter(c => c.active).length})
                 </button>
                 <button
                   onClick={() => setActiveFilter('inactive')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeFilter === 'inactive'
-                      ? 'bg-blue-500 text-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${activeFilter === 'inactive'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   Inactive ({clients.filter(c => !c.active).length})
                 </button>
                 <button
                   onClick={() => setActiveFilter('all')}
-                  className={`px-4 py-2 text-sm font-medium rounded-r-md transition-colors ${
-                    activeFilter === 'all'
-                      ? 'bg-blue-500 text-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium rounded-r-md transition-colors ${activeFilter === 'all'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   All ({clients.length})
                 </button>
               </div>
-              
+
               {/* Pagination Controls */}
               <div className="flex items-center gap-1">
                 <button className={buttonclass}>
                   <ChevronsLeft size={16} />
                 </button>
-                
+
                 <button className={buttonclass}>
                   <ChevronLeft size={16} />
                 </button>
-                
+
                 <button className={buttonclass}>
                   <ChevronRight size={16} />
                 </button>
-                
+
                 <button className={buttonclass}>
                   <ChevronsRight size={16} />
                 </button>
               </div>
 
               {/* New Button */}
-              <button 
-                onClick={() => console.log('Navigate to create new client')}
+              <button
+                onClick={() => navigate('/ClientForm')}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors"
               >
                 <Plus size={16} />
@@ -282,7 +280,7 @@ const ClientLast: React.FC = () => {
               </button>
 
               {/* Refresh Button */}
-              <button 
+              <button
                 onClick={fetchClients}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-md hover:bg-gray-600 transition-colors"
               >
@@ -327,11 +325,10 @@ const ClientLast: React.FC = () => {
                       <td className="py-3 px-4 text-gray-600">{client.city || '-'}</td>
                       <td className="py-3 px-4 text-gray-600">{client.gst_no || '-'}</td>
                       <td className="py-3 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          client.active 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${client.active
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}>
                           {client.active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
@@ -344,7 +341,7 @@ const ClientLast: React.FC = () => {
                             <MoreVertical size={14} />
                             Options
                           </button>
-                          
+
                           {dropdownOpen === client.id && (
                             <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                               <div className="py-1">
@@ -409,6 +406,15 @@ const ClientLast: React.FC = () => {
         <div
           className="fixed inset-0 z-0"
           onClick={() => setDropdownOpen(null)}
+        />
+      )}
+
+      {/* View Modal */}
+      {selectedClient && (
+        <ClientViewModal
+          client={selectedClient}
+          isOpen={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
         />
       )}
     </div>

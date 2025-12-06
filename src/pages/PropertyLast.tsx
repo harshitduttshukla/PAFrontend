@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TableHeader from '../ui/TableHeader'
 import Tablebody from '../ui/Tablebody'
 import LableAndValue from '../ui/LableAndValue'
@@ -6,14 +7,49 @@ import { ChevronDown, Search, Edit, Eye, Trash2, X } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+interface Property {
+  property_id: number;
+  property_status: string;
+  post_id?: string;
+  postId?: string;
+  property_type: string;
+  city: string;
+  location: string;
+  pincode?: string;
+  pincode_id?: number;
+  landmark?: string;
+  host_name?: string;
+  host?: string;
+  manual_host_name?: string;
+  contact_person?: string;
+  contact_number?: string;
+  contactNo?: string;
+  email_id?: string;
+  ivr_number?: string;
+  master_bedroom?: number;
+  common_bedroom?: number;
+  check_in_time?: string;
+  check_out_time?: string;
+  caretaker_name?: string;
+  caretaker_number?: string;
+  address1?: string;
+  address2?: string;
+  address3?: string;
+  property_url?: string;
+  note?: string;
+  thumbnail?: string;
+  type?: string;
+}
+
 const PropertyDashboard = () => {
+  const navigate = useNavigate();
   const [showEntries, setShowEntries] = useState('10');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [showOptionsDropdown, setShowOptionsDropdown] = useState(null);
-  
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [showOptionsDropdown, setShowOptionsDropdown] = useState<number | null>(null);
+
   // New state for API integration
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pagination, setPagination] = useState({
@@ -36,19 +72,19 @@ const PropertyDashboard = () => {
   ];
 
   // Fetch properties from API
-  const fetchProperties = async (page = 1, limit = 30) => {
+  const fetchProperties = useCallback(async (page = 1, limit = 30) => {
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}api/properties?page=${page}&limit=${limit}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
       }
-      
+
       const result = await response.json();
-      
+
       setProperties(result.data || []);
       setPagination(result.pagination || {
         currentPage: 1,
@@ -57,26 +93,22 @@ const PropertyDashboard = () => {
         hasNext: false,
         hasPrev: false
       });
-      
-    } catch (err:any) {
-      setError(err.message);
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
       console.error('Error fetching properties:', err);
       // Fallback to empty array if API fails
       setProperties([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Load properties on component mount
-  useEffect(() => {
-    fetchProperties(1, parseInt(showEntries));
   }, []);
 
-  // Reload when showEntries changes
+  // Load properties on component mount and when showEntries changes
   useEffect(() => {
     fetchProperties(1, parseInt(showEntries));
-  }, [showEntries]);
+  }, [fetchProperties, showEntries]);
 
   // Filter data based on search term
   const filteredData = properties.filter(item =>
@@ -85,55 +117,56 @@ const PropertyDashboard = () => {
     )
   );
 
-  const handleOptionsClick = (index:any, e:any) => {
+  const handleOptionsClick = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setShowOptionsDropdown(showOptionsDropdown === index ? null : index);
   };
 
-  const handleEdit = (item:any) => {
+  const handleEdit = (item: Property) => {
     console.log('Edit item:', item);
     setShowOptionsDropdown(null);
-    // You can implement edit functionality here
+    navigate('/PropertyForm', { state: { property: item } });
   };
 
-  const handleView = (item:any) => {
+  const handleView = (item: Property) => {
     setSelectedProperty(item);
     setShowOptionsDropdown(null);
   };
 
-  const handleDelete = async (item:any) => {
-    if (!confirm(`Are you sure you want to delete property ${item.property_id }?`)) {
+  const handleDelete = async (item: Property) => {
+    if (!confirm(`Are you sure you want to delete property ${item.property_id}?`)) {
       return;
     }
 
     try {
-      const propertyId = item.property_id ;
+      const propertyId = item.property_id;
       const response = await fetch(`${API_BASE_URL}api/deleteProperty/${propertyId}`, {
         method: 'DELETE'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete property');
       }
-      
+
       const result = await response.json();
       alert(result.message || 'Property deleted successfully');
-      
+
       // Refresh the data
       fetchProperties(pagination.currentPage, parseInt(showEntries));
-      
-    } catch (err:any) {
-      setError(err.message);
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
       console.error('Error deleting property:', err);
-      alert('Failed to delete property: ' + err.message);
+      alert('Failed to delete property: ' + errorMessage);
     }
-    
+
     setShowOptionsDropdown(null);
   };
 
-  const PropertyDetailsModal = ({ property, onClose }:{
-    property : any,
-    onClose : any,
+  const PropertyDetailsModal = ({ property, onClose }: {
+    property: Property | null,
+    onClose: () => void,
   }) => {
     if (!property) return null;
 
@@ -152,22 +185,42 @@ const PropertyDashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <LableAndValue value={property.property_id} lable='Property Id'/>
-              <LableAndValue value={property.city} lable='City'/>
-              <LableAndValue value={property.property_status} lable='Status'/>
-              {/* want to add */}
-              <LableAndValue value={property.host} lable='Host'/>  
-              <LableAndValue value={property.ivr_number} lable='IVR Number'/>  
-              <LableAndValue value={property.contact_person} lable='Contact Person'/>   
-              <LableAndValue value={property.contact_person} lable='Contact Person'/>
-              <LableAndValue value={property.email_id} lable='Email-Id'/>
-              <LableAndValue value={property.address1} lable='Address 1'/> 
-              <LableAndValue value={property.address2} lable='Address 2'/> 
-              <LableAndValue value={property.address3} lable='Address 3'/> 
-              
+              <h3 className="font-medium text-blue-600 border-b pb-1">Basic Information</h3>
+              <LableAndValue value={property.property_id} lable='Property Id' />
+              <LableAndValue value={property.property_status} lable='Status' />
+              <LableAndValue value={property.post_id || property.postId || ''} lable='Post Id' />
+              <LableAndValue value={property.property_type} lable='Type' />
+              <LableAndValue value={property.city} lable='City' />
+              <LableAndValue value={property.location} lable='Location' />
+              <LableAndValue value={property.pincode || property.pincode_id || ''} lable='Pincode' />
+              <LableAndValue value={property.landmark || ''} lable='Landmark' />
+
+              <h3 className="font-medium text-blue-600 border-b pb-1 mt-4">Host Information</h3>
+              <LableAndValue value={property.host_name || property.host || ''} lable='Host Name' />
+              <LableAndValue value={property.manual_host_name || ''} lable='Manual Host Name' />
+              <LableAndValue value={property.contact_person || ''} lable='Contact Person' />
+              <LableAndValue value={property.contact_number || property.contactNo || ''} lable='Contact Number' />
+              <LableAndValue value={property.email_id || ''} lable='Email-Id' />
+              <LableAndValue value={property.ivr_number || ''} lable='IVR Number' />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-medium text-blue-600 border-b pb-1">Property Details</h3>
+              <LableAndValue value={property.master_bedroom || 0} lable='Master Bedroom' />
+              <LableAndValue value={property.common_bedroom || 0} lable='Common Bedroom' />
+              <LableAndValue value={property.check_in_time || ''} lable='Check-In Time' />
+              <LableAndValue value={property.check_out_time || ''} lable='Check-Out Time' />
+
+              <h3 className="font-medium text-blue-600 border-b pb-1 mt-4">Caretaker & Address</h3>
+              <LableAndValue value={property.caretaker_name || ''} lable='Caretaker Name' />
+              <LableAndValue value={property.caretaker_number || ''} lable='Caretaker Number' />
+              <LableAndValue value={property.address1 || ''} lable='Address 1' />
+              <LableAndValue value={property.address2 || ''} lable='Address 2' />
+              <LableAndValue value={property.address3 || ''} lable='Address 3' />
+
               <div className="flex flex-col sm:flex-row">
                 <span className="font-medium text-gray-700 w-full sm:w-32 mb-1 sm:mb-0">URL</span>
-                <span className="text-blue-600 break-all">: 
+                <span className="text-blue-600 break-all">:
                   {property.property_url ? (
                     <a href={property.property_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                       {property.property_url}
@@ -178,26 +231,37 @@ const PropertyDashboard = () => {
                 </span>
               </div>
             </div>
-
-            <div className="space-y-4">
-              <LableAndValue value={property.post_id || property.postId} lable='Post Id'/>
-              <LableAndValue value={property.location} lable='Location'/>
-              <LableAndValue value={property.property_type} lable='Apartments Type'/>
-              <LableAndValue value={property.contact_number || property.contactNo} lable='Contact No.'/>
-              <LableAndValue value={property.landmark} lable='Landmark'/>
-              <LableAndValue value={property.caretaker_name} lable='Caretaker Name'/>
-              <LableAndValue value={property.caretaker_number} lable='Caretaker Number'/>
-              <LableAndValue value={property.master_bedroom} lable='Master Bedroom'/>
-              <LableAndValue value={property.common_bedroom} lable='Common bedroom'/>
-            </div>
           </div>
+
+          {property.note && (
+            <div className="mt-6">
+              <h3 className="font-medium text-blue-600 border-b pb-1 mb-2">Notes</h3>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded">{property.note}</p>
+            </div>
+          )}
+
+          {property.thumbnail && (
+            <div className="mt-6">
+              <h3 className="font-medium text-blue-600 border-b pb-1 mb-2">Thumbnail</h3>
+              <div className="mt-2">
+                <img
+                  src={property.thumbnail}
+                  alt="Property Thumbnail"
+                  className="max-w-full h-auto max-h-64 rounded shadow-sm object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=No+Image';
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end mt-8">
             <button
               onClick={onClose}
               className="bg-red-500 hover:bg-red-600 text-white px-4 lg:px-6 py-2 rounded-md transition-colors text-sm lg:text-base"
             >
-              Cancel
+              Close
             </button>
           </div>
         </div>
@@ -225,7 +289,7 @@ const PropertyDashboard = () => {
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Reservation Records</h1>
-          
+
         </div>
 
         {/* Error Display */}
@@ -281,16 +345,16 @@ const PropertyDashboard = () => {
               <table className="w-full">
                 <TableHeader Columns={Columns} />
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredData.length > 0 ? filteredData.map((item:any, index) => (
-                    <tr key={item.property_id || item.propertyId || index} className="hover:bg-gray-50 transition-colors">
-                      <Tablebody value={item.post_id || item.postId || '0'}/>
-                      <Tablebody value={item.city || 'N/A'}/>
-                      <Tablebody value={item.location || 'N/A'}/>
-                      <Tablebody value={item.contact_person || 'N/A'}/>
+                  {filteredData.length > 0 ? filteredData.map((item, index) => (
+                    <tr key={item.property_id || index} className="hover:bg-gray-50 transition-colors">
+                      <Tablebody value={item.post_id || item.postId || '0'} />
+                      <Tablebody value={item.city || 'N/A'} />
+                      <Tablebody value={item.location || 'N/A'} />
+                      <Tablebody value={item.contact_person || 'N/A'} />
                       <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">{item.address1 || 'N/A'}</td>
-                      <Tablebody value={item.landmark || 'N/A'}/>
-                      <Tablebody value={item.type || 'N/A'}/>
-                      
+                      <Tablebody value={item.landmark || 'N/A'} />
+                      <Tablebody value={item.type || 'N/A'} />
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="relative">
                           <button
@@ -300,7 +364,7 @@ const PropertyDashboard = () => {
                             <span>Options</span>
                             <ChevronDown className="w-3 h-3" />
                           </button>
-                          
+
                           {showOptionsDropdown === index && (
                             <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                               <button
@@ -348,33 +412,31 @@ const PropertyDashboard = () => {
             <div className="text-sm text-gray-700">
               Showing {((pagination.currentPage - 1) * parseInt(showEntries)) + 1} to {Math.min(pagination.currentPage * parseInt(showEntries), pagination.totalItems)} of {pagination.totalItems} entries
             </div>
-            
+
             {pagination.totalPages > 1 && (
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handlePreviousPage}
                   disabled={!pagination.hasPrev}
-                  className={`px-3 py-1 rounded text-sm ${
-                    pagination.hasPrev
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
+                  className={`px-3 py-1 rounded text-sm ${pagination.hasPrev
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                 >
                   Previous
                 </button>
-                
+
                 <span className="text-sm text-gray-700">
                   Page {pagination.currentPage} of {pagination.totalPages}
                 </span>
-                
+
                 <button
                   onClick={handleNextPage}
                   disabled={!pagination.hasNext}
-                  className={`px-3 py-1 rounded text-sm ${
-                    pagination.hasNext
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
+                  className={`px-3 py-1 rounded text-sm ${pagination.hasNext
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                 >
                   Next
                 </button>
@@ -385,14 +447,14 @@ const PropertyDashboard = () => {
       </div>
 
       {/* Property Details Modal */}
-      <PropertyDetailsModal 
+      <PropertyDetailsModal
         property={selectedProperty}
         onClose={() => setSelectedProperty(null)}
       />
 
       {/* Click outside to close dropdown */}
       {showOptionsDropdown !== null && (
-        <div 
+        <div
           className="fixed inset-0 z-5"
           onClick={() => setShowOptionsDropdown(null)}
         />

@@ -7,7 +7,7 @@ export interface Reservation {
   guest_name: string;
   guest_email: string;
   contact_number: string;
-  contact_person_number:string;
+  contact_person_number: string;
   check_in_date: string;
   check_out_date: string;
   check_in_time: string;
@@ -16,6 +16,7 @@ export interface Reservation {
   base_rate: string;
   taxes: string;
   total_tariff: string;
+  total_amount?: string;
   payment_mode: string;
   tariff_type: string;
   chargeable_days: number;

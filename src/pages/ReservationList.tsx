@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { XCircle, Loader2, } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -15,6 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Main Component - Fixed with proper PDF download functionality
 const ReservationList: React.FC = () => {
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,14 +31,14 @@ const ReservationList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showCancelBooking, setShowCancelBooking] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
-  const [isSendingEmail,setIsSendingEmail] = useState<boolean>(false);
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
 
 
-    // Send Email Function - Directly with reservation data
+  // Send Email Function - Directly with reservation data
   const handleSendEmail = async (booking: Reservation) => {
     try {
       setIsSendingEmail(true);
-      
+
       // Prepare email data from reservation
       const emailData = {
         apartmentemail: booking.guest_email || '',
@@ -72,7 +74,7 @@ const ReservationList: React.FC = () => {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         // Show success message
         alert(`Email sent successfully to ${booking.guest_name}!`);
@@ -102,7 +104,7 @@ const ReservationList: React.FC = () => {
   const handleCancelBooking = async (bookingId: number) => {
     try {
       setIsCancelling(true);
-      
+
       const response = await fetch(`${API_BASE_URL}api/deleteReservation?id=${bookingId}`, {
         method: 'DELETE',
       });
@@ -112,42 +114,42 @@ const ReservationList: React.FC = () => {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         // Update the local state to remove the cancelled booking
         setReservations(prev => prev.filter(booking => booking.id !== bookingId));
         setFilteredReservations(prev => prev.filter(booking => booking.id !== bookingId));
-        
+
         // Close modals
         setShowCancelBooking(false);
         setSelectedBooking(null);
-            
-            // Show success message (you can use a toast notification here)
-            alert('Booking cancelled successfully!');
-          } else {
-            throw new Error(result.message || 'Failed to cancel booking');
-          }
-        } catch (err) {
-          console.error('Error cancelling booking:', err);
-          alert('Failed to cancel booking. Please try again.');
-        } finally {
-          setIsCancelling(false);
-        }
-      };
 
-      // Handle Cancel Booking Click
-      const handleCancelBookingClick = (booking: Reservation): void => {
-        setSelectedBooking(booking);
-        setShowCancelBooking(true);
-        setShowOptions(null);
-      };
+        // Show success message (you can use a toast notification here)
+        alert('Booking cancelled successfully!');
+      } else {
+        throw new Error(result.message || 'Failed to cancel booking');
+      }
+    } catch (err) {
+      console.error('Error cancelling booking:', err);
+      alert('Failed to cancel booking. Please try again.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
-      // Confirm Cancel Booking
-      const confirmCancelBooking = (): void => {
-        if (selectedBooking) {
-          handleCancelBooking(selectedBooking.id);
-        }
-      };
+  // Handle Cancel Booking Click
+  const handleCancelBookingClick = (booking: Reservation): void => {
+    setSelectedBooking(booking);
+    setShowCancelBooking(true);
+    setShowOptions(null);
+  };
+
+  // Confirm Cancel Booking
+  const confirmCancelBooking = (): void => {
+    if (selectedBooking) {
+      handleCancelBooking(selectedBooking.id);
+    }
+  };
 
   // Fetch reservations from API
   useEffect(() => {
@@ -155,7 +157,7 @@ const ReservationList: React.FC = () => {
       try {
         setLoading(true);
         const response = await fetch(`${API_BASE_URL}api/getAllReservations`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch reservations');
         }
@@ -186,7 +188,7 @@ const ReservationList: React.FC = () => {
     }
 
     const searchLower = searchTerm.toLowerCase();
-    const filtered = reservations.filter((reservation) => 
+    const filtered = reservations.filter((reservation) =>
       reservation.reservation_no.toLowerCase().includes(searchLower) ||
       reservation.guest_name.toLowerCase().includes(searchLower) ||
       reservation.client_name.toLowerCase().includes(searchLower) ||
@@ -213,15 +215,15 @@ const ReservationList: React.FC = () => {
         </div>
         <div class="space-y-4">
           ${[
-            { label: 'Guest Name', value: booking.guest_name },
-            { label: 'Guest Email', value: booking.guest_email },
-            { label: 'Contact Number', value: booking.contact_number || 'N/A' },
-            { label: 'Company Name', value: booking.client_name },
-            { label: 'Occupancy', value: booking.occupancy.toString() + ' Person(s)' },
-            { label: 'Check In', value: `${new Date(booking.check_in_date).toLocaleDateString()} at ${booking.check_in_time}` },
-            { label: 'Check Out', value: `${new Date(booking.check_out_date).toLocaleDateString()} at ${booking.check_out_time}` },
-            { label: 'Chargeable Days', value: booking.chargeable_days.toString() }
-          ].map(field => `
+          { label: 'Guest Name', value: booking.guest_name },
+          { label: 'Guest Email', value: booking.guest_email },
+          { label: 'Contact Number', value: booking.contact_number || 'N/A' },
+          { label: 'Company Name', value: booking.client_name },
+          { label: 'Occupancy', value: booking.occupancy.toString() + ' Person(s)' },
+          { label: 'Check In', value: `${new Date(booking.check_in_date).toLocaleDateString()} at ${booking.check_in_time}` },
+          { label: 'Check Out', value: `${new Date(booking.check_out_date).toLocaleDateString()} at ${booking.check_out_time}` },
+          { label: 'Chargeable Days', value: booking.chargeable_days.toString() }
+        ].map(field => `
             <div class="border-b pb-3">
               <p class="text-sm font-semibold text-gray-600 uppercase mb-1">${field.label}</p>
               <p class="text-lg font-medium text-gray-800">${field.value}</p>
@@ -237,15 +239,15 @@ const ReservationList: React.FC = () => {
         useCORS: true,
         logging: false
       });
-      
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Guest_Details_${booking.reservation_no}.pdf`);
-      
+
       // Clean up
       document.body.removeChild(element);
     } catch (error) {
@@ -267,20 +269,20 @@ const ReservationList: React.FC = () => {
         </div>
         <div class="grid grid-cols-2 gap-4">
           ${[
-            { label: 'Property Type', value: booking.property_type },
-            { label: 'Room Type', value: booking.room_type },
-            { label: 'City', value: booking.city },
-            { label: 'Location', value: booking.location },
-            { label: 'Address', value: `${booking.address1}, ${booking.address2}, ${booking.address3}`, fullWidth: true },
-            { label: 'Landmark', value: booking.landmark || 'N/A' },
-            { label: 'Master Bedroom', value: booking.master_bedroom?.toString() || 'N/A' },
-            { label: 'Common Bedroom', value: booking.common_bedroom?.toString() || 'N/A' },
-            { label: 'Contact Person', value: booking.contact_person || 'N/A' },
-            { label: 'Contact Number', value: booking.contact_person_number || 'N/A' },
-            { label: 'Caretaker Name', value: booking.caretaker_name || 'N/A' },
-            { label: 'Caretaker Number', value: booking.caretaker_number || 'N/A' },
-            { label: 'Property URL', value: booking.property_url || 'N/A', fullWidth: true }
-          ].map(field => `
+          { label: 'Property Type', value: booking.property_type },
+          { label: 'Room Type', value: booking.room_type },
+          { label: 'City', value: booking.city },
+          { label: 'Location', value: booking.location },
+          { label: 'Address', value: `${booking.address1}, ${booking.address2}, ${booking.address3}`, fullWidth: true },
+          { label: 'Landmark', value: booking.landmark || 'N/A' },
+          { label: 'Master Bedroom', value: booking.master_bedroom?.toString() || 'N/A' },
+          { label: 'Common Bedroom', value: booking.common_bedroom?.toString() || 'N/A' },
+          { label: 'Contact Person', value: booking.contact_person || 'N/A' },
+          { label: 'Contact Number', value: booking.contact_person_number || 'N/A' },
+          { label: 'Caretaker Name', value: booking.caretaker_name || 'N/A' },
+          { label: 'Caretaker Number', value: booking.caretaker_number || 'N/A' },
+          { label: 'Property URL', value: booking.property_url || 'N/A', fullWidth: true }
+        ].map(field => `
             <div class="${field.fullWidth ? 'col-span-2' : ''} border-b pb-3">
               <p class="text-sm font-semibold text-gray-600 uppercase mb-1">${field.label}</p>
               <p class="text-lg font-medium text-gray-800">${field.value}</p>
@@ -296,15 +298,15 @@ const ReservationList: React.FC = () => {
         useCORS: true,
         logging: false
       });
-      
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Apartment_Details_${booking.reservation_no}.pdf`);
-      
+
       // Clean up
       document.body.removeChild(element);
     } catch (error) {
@@ -347,6 +349,10 @@ const ReservationList: React.FC = () => {
     setShowOptions(null);
   };
 
+  const handleEditBooking = (booking: Reservation): void => {
+    navigate(`/ReservationManagementSystem?id=${booking.id}`);
+  };
+
   const handlePageChange = (page: number): void => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -371,7 +377,7 @@ const ReservationList: React.FC = () => {
           <XCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
           <p className="text-red-600 font-semibold mb-2">Error Loading Data</p>
           <p className="text-gray-600">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -408,6 +414,7 @@ const ReservationList: React.FC = () => {
           onApartmentPDF={handleApartmentPDF}
           onCancelBooking={handleCancelBookingClick}
           onSendEmail={handleSendEmailClick}
+          onEdit={handleEditBooking}
           isSendingEmail={isSendingEmail}
         />
 
@@ -440,7 +447,7 @@ const ReservationList: React.FC = () => {
         booking={selectedBooking}
       />
 
-       <CancelBookingModal
+      <CancelBookingModal
         isOpen={showCancelBooking}
         onClose={() => {
           setShowCancelBooking(false);

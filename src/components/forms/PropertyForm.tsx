@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Check, Search } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import FormInput from "../../ui/FormInput"
 import FormSelect from "../../ui/FormSelect"
 import FormTextarea from "../../ui/FormTextarea"
@@ -9,24 +10,21 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Types
 interface HostData {
   host_id: number;
-  host_owner_name: string; 
   host_name: string;
-  host_pan_number?: string;
-  rating?: number;
   host_email: string;
   host_contact_number: string;
-  created_at?: string;
+  host_owner_name: string;
+  rating?: number;
 }
 
 interface PincodeData {
   pincode_id: number;
   pincode: string;
   city: string;
-  state?: string;
-  district?: string;
 }
 
 interface PropertyFormData {
+  id?: number;
   propertyStatus: string;
   hostId: number | null;
   hostName: string;
@@ -57,20 +55,21 @@ interface PropertyFormData {
 }
 
 // Reusable Search Input Component
-interface SearchInputProps {
+interface SearchInputProps<T> {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  onSelect: (item: any) => void;
-  searchResults: any[];
+  onSelect: (item: T) => void;
+  searchResults: T[];
   isLoading: boolean;
   placeholder: string;
-  displayKey: string;
+  displayKey: keyof T;
   noResultsText: string;
   selectedInfo?: React.ReactNode;
+  renderItem?: (item: T) => React.ReactNode;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({
+function SearchInput<T>({
   label,
   value,
   onChange,
@@ -80,8 +79,9 @@ const SearchInput: React.FC<SearchInputProps> = ({
   placeholder,
   displayKey,
   noResultsText,
-  selectedInfo
-}) => {
+  selectedInfo,
+  renderItem
+}: SearchInputProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -102,7 +102,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
     setIsOpen(inputValue.length > 0);
   };
 
-  const handleSelect = (item: any) => {
+  const handleSelect = (item: T) => {
     onSelect(item);
     setIsOpen(false);
   };
@@ -133,16 +133,13 @@ const SearchInput: React.FC<SearchInputProps> = ({
           {searchResults.length > 0 ? (
             searchResults.map((item, index) => (
               <div
-                key={item[displayKey === 'host_name' ? 'host_id' : 'pincode_id'] || index}
+                key={index}
                 onClick={() => handleSelect(item)}
                 className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
               >
-                <div className="font-medium text-gray-800">
-                  {displayKey === 'host_name' ? item.host_name : `${item.pincode}${item.city ? ` - ${item.city}` : ''}`}
-                </div>
-                {displayKey === 'host_name' && (
-                  <div className="text-sm text-gray-500 mt-1">
-                    {item.host_email} • {item.host_contact_number}
+                {renderItem ? renderItem(item) : (
+                  <div className="font-medium text-gray-800">
+                    {String(item[displayKey])}
                   </div>
                 )}
               </div>
@@ -160,13 +157,12 @@ const SearchInput: React.FC<SearchInputProps> = ({
       )}
     </div>
   );
-};
-
-
-
-
+}
 
 const PropertyForm: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<PropertyFormData>({
     propertyStatus: '',
     hostId: null,
@@ -228,10 +224,78 @@ const PropertyForm: React.FC = () => {
   const debouncedHostSearch = useDebounce(hostSearchTerm, 300);
   const debouncedPincodeSearch = useDebounce(pincodeSearchTerm, 300);
 
+  // Initialize form if editing
+  useEffect(() => {
+    if (location.state && location.state.property) {
+      const property = location.state.property;
+      setIsEditMode(true);
+
+      // Set form data
+      setFormData({
+        id: property.property_id,
+        propertyStatus: property.property_status || '',
+        hostId: property.host_id,
+        hostName: property.host_name || '',
+        ivrNumber: property.ivr_number || '',
+        pincodeId: property.pincode_id,
+        pinCode: property.pincode || '',
+        city: property.city || '',
+        location: property.location || '',
+        postId: property.post_id || '',
+        propertyType: property.property_type || '',
+        manualHostName: property.manual_host_name || '',
+        contactPerson: property.contact_person || '',
+        contactNumber: property.contact_number || '',
+        emailId: property.email_id || '',
+        caretakerName: property.caretaker_name || '',
+        caretakerNumber: property.caretaker_number || '',
+        note: property.note || '',
+        checkInTime: property.check_in_time || '',
+        checkOutTime: property.check_out_time || '',
+        masterBedroom: (property.master_bedroom || '0').toString(),
+        commonBedroom: (property.common_bedroom || '0').toString(),
+        landmark: property.landmark || '',
+        address1: property.address1 || '',
+        address2: property.address2 || '',
+        address3: property.address3 || '',
+        thumbnail: property.thumbnail || '',
+        propertyUrl: property.property_url || ''
+      });
+
+      // Set search terms to pre-fill inputs
+      if (property.host_name) setHostSearchTerm(property.host_name);
+      if (property.pincode) setPincodeSearchTerm(property.pincode);
+
+      // Set selected objects if available
+      if (property.host_id) {
+        setSelectedHost({
+          host_id: property.host_id,
+          host_name: property.host_name || '',
+          host_email: property.host_email || '',
+          host_contact_number: property.host_contact_number || '',
+          host_owner_name: property.host_owner_name || ''
+        });
+      }
+
+      if (property.pincode_id) {
+        setSelectedPincode({
+          pincode_id: property.pincode_id,
+          pincode: property.pincode || '',
+          city: property.pincode_city || property.city || ''
+        });
+      }
+    }
+  }, [location.state]);
+
   // API call functions
   const searchHosts = async (searchTerm: string) => {
     if (!searchTerm.trim()) {
       setHostSearchResults([]);
+      return;
+    }
+
+    // Don't search if the term matches the selected host (prevents re-search on selection)
+    if (selectedHost && searchTerm === selectedHost.host_name) {
       return;
     }
 
@@ -258,6 +322,11 @@ const PropertyForm: React.FC = () => {
       return;
     }
 
+    // Don't search if the term matches the selected pincode
+    if (selectedPincode && searchTerm === selectedPincode.pincode) {
+      return;
+    }
+
     setIsPincodeLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}api/PinCode?pincode=${encodeURIComponent(searchTerm)}`);
@@ -278,11 +347,11 @@ const PropertyForm: React.FC = () => {
   // Search effects
   useEffect(() => {
     searchHosts(debouncedHostSearch);
-  }, [debouncedHostSearch]);
+  }, [debouncedHostSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     searchPincodes(debouncedPincodeSearch);
-  }, [debouncedPincodeSearch]);
+  }, [debouncedPincodeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInputChange = (field: keyof PropertyFormData, value: string) => {
     setFormData(prev => ({
@@ -317,7 +386,7 @@ const PropertyForm: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      // Prepare data for API - send IDs instead of names
+      // Prepare data for API
       const propertyData = {
         property_status: formData.propertyStatus,
         host_id: formData.hostId,
@@ -345,8 +414,14 @@ const PropertyForm: React.FC = () => {
         property_url: formData.propertyUrl
       };
 
-      const response = await fetch(`${API_BASE_URL}api/properties`, {
-        method: 'POST',
+      const url = isEditMode && formData.id
+        ? `${API_BASE_URL}api/updateProperty/${formData.id}`
+        : `${API_BASE_URL}api/properties`;
+
+      const method = isEditMode && formData.id ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -355,87 +430,22 @@ const PropertyForm: React.FC = () => {
 
       if (response.ok) {
         const result = await response.json();
-        alert('Property saved successfully!\n\nProperty ID: ' + result.property.property_id);
+        alert(`Property ${isEditMode ? 'updated' : 'saved'} successfully!`);
         console.log('Saved property:', result);
+        navigate('/PropertyLast');
       } else {
         const error = await response.json();
-        alert('Error saving property: ' + (error.error || 'Unknown error'));
+        alert(`Error ${isEditMode ? 'updating' : 'saving'} property: ` + (error.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error saving property:', error);
-      alert('Error saving property. Please try again.');
+      alert(`Error ${isEditMode ? 'updating' : 'saving'} property. Please try again.`);
     }
   };
 
-//   const handleSave = async () => {
-//   try {
-//     const propertyData = {
-//       property_status: formData.propertyStatus,
-//       host_id: formData.hostId,
-//       pincode_id: formData.pincodeId
-//       //  ✅ only include columns that exist in DB
-//     };
-
-//     const response = await fetch(`${API_BASE_URL}api/properties`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify(propertyData),
-//     });
-
-//     if (response.ok) {
-//       const result = await response.json();
-//       alert(
-//         "Property saved successfully!\n\nProperty ID: " +
-//           result.property.property_id
-//       );
-//       console.log("Saved property:", result);
-//     } else {
-//       const error = await response.json();
-//       alert("Error saving property: " + (error.error || "Unknown error"));
-//     }
-//   } catch (error) {
-//     console.error("Error saving property:", error);
-//     alert("Error saving property. Please try again.");
-//   }
-// };
-
   const handleCancel = () => {
     if (window.confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
-      setFormData({
-        propertyStatus: '',
-        hostId: null,
-        hostName: '',
-        ivrNumber: '',
-        pincodeId: null,
-        pinCode: '',
-        city: '',
-        location: '',
-        postId: '',
-        propertyType: '',
-        manualHostName: '',
-        contactPerson: '',
-        contactNumber: '',
-        emailId: '',
-        caretakerName: '',
-        caretakerNumber: '',
-        note: '',
-        checkInTime: '14:00',
-        checkOutTime: '11:00',
-        masterBedroom: '0',
-        commonBedroom: '0',
-        landmark: '',
-        address1: '',
-        address2: '',
-        address3: '',
-        thumbnail: '',
-        propertyUrl: ''
-      });
-      setSelectedHost(null);
-      setSelectedPincode(null);
-      setHostSearchTerm('');
-      setPincodeSearchTerm('');
+      navigate('/PropertyLast');
     }
   };
 
@@ -444,16 +454,16 @@ const PropertyForm: React.FC = () => {
       <div className="max-w-6xl mx-auto mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gray-50 px-6 py-5 border-b flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">Property Form</h2>
+          <h2 className="text-xl font-semibold text-gray-800">{isEditMode ? 'Edit Property' : 'Property Form'}</h2>
           <div className="flex space-x-3">
-            <button 
+            <button
               onClick={handleSave}
               className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-lg transition-all duration-300 hover:-translate-y-0.5 font-medium"
             >
               <Check className="w-4 h-4" />
-              <span>Save</span>
+              <span>{isEditMode ? 'Update' : 'Save'}</span>
             </button>
-            <button 
+            <button
               onClick={handleCancel}
               className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-lg transition-all duration-300 hover:-translate-y-0.5 font-medium"
             >
@@ -483,7 +493,7 @@ const PropertyForm: React.FC = () => {
               ]}
             />
 
-            <SearchInput
+            <SearchInput<HostData>
               label="HOST NAME"
               value={hostSearchTerm}
               onChange={setHostSearchTerm}
@@ -493,6 +503,16 @@ const PropertyForm: React.FC = () => {
               placeholder="Search for host..."
               displayKey="host_name"
               noResultsText="No hosts found"
+              renderItem={(item) => (
+                <>
+                  <div className="font-medium text-gray-800">
+                    {item.host_name}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {item.host_email} • {item.host_contact_number}
+                  </div>
+                </>
+              )}
               selectedInfo={selectedHost && (
                 <div className="p-4 bg-gray-50 border-l-4 border-blue-500 rounded-lg">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -529,7 +549,7 @@ const PropertyForm: React.FC = () => {
 
           {/* Second Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <SearchInput
+            <SearchInput<PincodeData>
               label="PIN CODE"
               value={pincodeSearchTerm}
               onChange={setPincodeSearchTerm}
@@ -539,6 +559,11 @@ const PropertyForm: React.FC = () => {
               placeholder="Search pincode..."
               displayKey="pincode"
               noResultsText="No pincodes found"
+              renderItem={(item) => (
+                <div className="font-medium text-gray-800">
+                  {item.pincode}{item.city ? ` - ${item.city}` : ''}
+                </div>
+              )}
               selectedInfo={selectedPincode && (
                 <div className="p-2 bg-blue-50 rounded text-sm">
                   <strong>ID:</strong> {selectedPincode.pincode_id}
@@ -581,7 +606,7 @@ const PropertyForm: React.FC = () => {
                 { value: '3 BHK', label: '3 BHK' },
                 { value: '4 BHK', label: '4 BHK' },
                 { value: 'studio', label: 'Studio' },
-                
+
               ]}
             />
 
@@ -741,7 +766,7 @@ const PropertyForm: React.FC = () => {
             />
           </div>
         </div>
-      </div> 
+      </div>
     </div>
   );
 };
