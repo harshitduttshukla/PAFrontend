@@ -9,7 +9,7 @@ import HostList from './pages/HostLast'
 import PropertyLast from './pages/PropertyLast'
 import ClientLast from './pages/ClientLast'
 import ReservationList from './pages/ReservationList'
-import Invoicepage from './pages/Invoicepage'
+import Invoicepage from './pages/Invoice'
 
 import Layout from './Layout';
 
