@@ -806,7 +806,7 @@ const ReservationManagementSystem: React.FC = () => {
       <div className="p-6 space-y-6">
         {/* Top Selection Row */}
         <div className="bg-white p-4 rounded shadow-sm">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Client Search Dropdown */}
             <div className="relative" ref={clientDropdownRef}>
               <div className="relative">
@@ -909,7 +909,7 @@ const ReservationManagementSystem: React.FC = () => {
 
           {activeSection === 'guest' && (
             <div className="p-4">
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <input
                   type="text"
                   placeholder="Enter company Name"
@@ -1098,7 +1098,7 @@ const ReservationManagementSystem: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {roomAvailability.map((room) => (
                       <div key={room.roomType} className={`p-3 border rounded ${room.isAvailable ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                         <div className="font-medium">{room.roomType}</div>
@@ -1110,7 +1110,7 @@ const ReservationManagementSystem: React.FC = () => {
                   </div>
 
                   {roomAvailability.some(room => room.conflictingReservations && room.conflictingReservations.length > 0) && (
-                    <div className="mt-6">
+                    <div className="mt-6 overflow-x-auto">
                       <h4 className="font-medium mb-2">Conflicting Reservations:</h4>
                       <table className="w-full border-collapse border border-gray-300">
                         <thead>
@@ -1157,7 +1157,7 @@ const ReservationManagementSystem: React.FC = () => {
 
           {activeSection === 'apartments' && (
             <div className="p-4">
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <input
                   type="text"
                   placeholder="Host Name"
@@ -1300,7 +1300,7 @@ const ReservationManagementSystem: React.FC = () => {
 
           {activeSection === 'pajasa' && (
             <div className="p-4">
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">For Comments Only</label>
                   <textarea
@@ -1363,7 +1363,7 @@ const ReservationManagementSystem: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name</label>
                 <input
@@ -1473,10 +1473,11 @@ const ReservationManagementSystem: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+          </div >
+        )
+        }
+      </div >
+    </div >
   );
 };
 

@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { X } from "lucide-react";
 
 interface MenuItem {
   label: string;
@@ -17,33 +18,62 @@ const menuItems: MenuItem[] = [
   { label: "Reservation List", path: "/ReservationList" },
   { label: "Invoice Form", path: "/InvoiceForm" },
   { label: "Invoice Page", path: "/Invoicepage" },
-  
-
 ];
 
-function Sidebar() {
-  return (
-    <div className=" h-screen w-50 p-4 shadow-lg overflow-y-auto">
-      <h2 className="text-2xl font-bold mb-6 ml-4 text-gray-800 ">DashBoard</h2>
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
 
-      <div className="space-y-4">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `block px-4 py-2 rounded-lg text-lg font-medium transition-all duration-200 ${
-                isActive
+function Sidebar({ isOpen = true, onClose }: SidebarProps) {
+  return (
+    <>
+      <div className={`
+        bg-white h-screen w-64 p-4 shadow-lg overflow-y-auto fixed top-0 left-0 z-50 transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0 lg:w-52
+      `}>
+        <div className="flex justify-between items-center mb-6 ml-4 mt-2">
+          <h2 className="text-2xl font-bold text-gray-800">DashBoard</h2>
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 rounded-md hover:bg-gray-100 text-gray-600"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => {
+                if (window.innerWidth < 1024 && onClose) {
+                  onClose();
+                }
+              }}
+              className={({ isActive }) =>
+                `block px-4 py-2 rounded-lg text-lg font-medium transition-all duration-200 ${isActive
                   ? "bg-blue-500 text-white shadow"
                   : "text-gray-700 hover:bg-blue-100"
-              }`
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onClose}
+        />
+      )}
+    </>
   );
 }
 

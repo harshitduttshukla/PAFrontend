@@ -210,8 +210,8 @@ const ClientLast: React.FC = () => {
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border">
           {/* Title and Controls */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <div>
+          <div className="flex flex-col md:flex-row items-center justify-between p-4 border-b gap-4">
+            <div className="w-full md:w-auto text-center md:text-left">
               <h1 className="text-xl font-semibold text-gray-900">Clients</h1>
               {error && (
                 <p className="text-sm text-red-600 mt-1">
@@ -219,12 +219,12 @@ const ClientLast: React.FC = () => {
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
               {/* Filter Buttons */}
               <div className="flex items-center bg-gray-100 rounded-md">
                 <button
                   onClick={() => setActiveFilter('active')}
-                  className={`px-4 py-2 text-sm font-medium rounded-l-md transition-colors ${activeFilter === 'active'
+                  className={`px-3 py-2 text-sm font-medium rounded-l-md transition-colors ${activeFilter === 'active'
                     ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-900'
                     }`}
@@ -233,7 +233,7 @@ const ClientLast: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setActiveFilter('inactive')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${activeFilter === 'inactive'
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'inactive'
                     ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-900'
                     }`}
@@ -242,7 +242,7 @@ const ClientLast: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setActiveFilter('all')}
-                  className={`px-4 py-2 text-sm font-medium rounded-r-md transition-colors ${activeFilter === 'all'
+                  className={`px-3 py-2 text-sm font-medium rounded-r-md transition-colors ${activeFilter === 'all'
                     ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-900'
                     }`}

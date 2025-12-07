@@ -300,8 +300,8 @@ const PropertyDashboard = () => {
         )}
 
         {/* Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+          <div className="flex items-center space-x-2 w-full md:w-auto">
             <span className="text-gray-700">Show</span>
             <select
               className="border border-gray-300 rounded px-3 py-1 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -316,12 +316,12 @@ const PropertyDashboard = () => {
             <span className="text-gray-700">entries</span>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 w-full md:w-auto">
             <span className="text-gray-700">Search:</span>
-            <div className="relative">
+            <div className="relative flex-grow md:flex-grow-0">
               <input
                 type="text"
-                className="border border-gray-300 rounded px-3 py-1 pl-8 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:w-auto border border-gray-300 rounded px-3 py-1 pl-8 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder=""
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -408,13 +408,13 @@ const PropertyDashboard = () => {
 
         {/* Pagination Info and Controls */}
         {!loading && (
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-gray-700">
+          <div className="mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-sm text-gray-700 w-full md:w-auto text-center md:text-left">
               Showing {((pagination.currentPage - 1) * parseInt(showEntries)) + 1} to {Math.min(pagination.currentPage * parseInt(showEntries), pagination.totalItems)} of {pagination.totalItems} entries
             </div>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center space-x-2 w-full md:w-auto">
                 <button
                   onClick={handlePreviousPage}
                   disabled={!pagination.hasPrev}
