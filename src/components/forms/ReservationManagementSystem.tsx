@@ -118,6 +118,8 @@ interface AdditionalGuest {
   roomType: string;
   occupancy: string;
   address: string;
+  email?: string;
+  contactNumber?: string;
 }
 
 
@@ -256,8 +258,13 @@ const ReservationManagementSystem: React.FC = () => {
     cod: '',
     roomType: '',
     occupancy: '',
-    address: ''
+    address: '',
+    email: '',
+    contactNumber: ''
   });
+
+  // Date Validation State
+  const [dateError, setDateError] = useState<string | null>(null);
 
   // API Base URL
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -442,6 +449,19 @@ const ReservationManagementSystem: React.FC = () => {
     }));
   }, [sharedCheckInDate, sharedCheckInTime, sharedCheckOutDate, sharedCheckOutTime]);
 
+  // Real-time Date Validation
+  useEffect(() => {
+    if (sharedCheckInDate && sharedCheckOutDate) {
+      if (new Date(sharedCheckOutDate) <= new Date(sharedCheckInDate)) {
+        setDateError("Check-out date must be after check-in date");
+      } else {
+        setDateError(null);
+      }
+    } else {
+      setDateError(null);
+    }
+  }, [sharedCheckInDate, sharedCheckOutDate]);
+
   // Client search functionality
   const searchClients = useCallback(async (searchTerm: string) => {
     if (!searchTerm.trim()) {
@@ -589,7 +609,8 @@ const ReservationManagementSystem: React.FC = () => {
           propertyId: selectedProperty.property_id,
           checkInDate: sharedCheckInDate,
           checkOutDate: sharedCheckOutDate,
-          roomTypes: roomSelection
+          roomTypes: roomSelection,
+          excludeReservationId: reservationId
         })
       });
 
@@ -620,6 +641,11 @@ const ReservationManagementSystem: React.FC = () => {
       return;
     }
 
+    if (dateError) {
+      alert(dateError);
+      return;
+    }
+
     if (!selectedProperty) {
       alert('Please select a property');
       return;
@@ -645,6 +671,12 @@ const ReservationManagementSystem: React.FC = () => {
       additionalGuests, // Include additional guests
       createdAt: new Date().toISOString()
     };
+
+    // Date Validation
+    if (new Date(guestInfo.checkOutDate) <= new Date(guestInfo.checkInDate)) {
+      alert("Check-out date must be after check-in date");
+      return;
+    }
 
     try {
       const url = isEditMode
@@ -749,7 +781,9 @@ const ReservationManagementSystem: React.FC = () => {
       cod: '',
       roomType: '',
       occupancy: '',
-      address: ''
+      address: '',
+      email: '',
+      contactNumber: ''
     });
   };
 
@@ -774,12 +808,19 @@ const ReservationManagementSystem: React.FC = () => {
       cod: '',
       roomType: '',
       occupancy: '',
-      address: ''
+      address: '',
+      email: '',
+      contactNumber: ''
     });
   };
 
   const handleDeleteGuestEntry = (id: string) => {
     setAdditionalGuests(additionalGuests.filter(guest => guest.id !== id));
+  };
+
+  const handleEditGuestEntry = (guest: AdditionalGuest) => {
+    setNewGuestEntry(guest);
+    handleDeleteGuestEntry(guest.id);
   };
 
   return (
@@ -788,7 +829,8 @@ const ReservationManagementSystem: React.FC = () => {
       <div className="bg-white p-4 flex justify-end space-x-2 border-b">
         <button
           onClick={handleSave}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center space-x-2"
+          className={`bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center space-x-2 ${!!dateError ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={!!dateError}
         >
           <Save size={16} />
           <span>{isEditMode ? 'Update' : 'Save'}</span>
@@ -1023,6 +1065,14 @@ const ReservationManagementSystem: React.FC = () => {
                   value={guestInfo.totalTariff}
                   readOnly
                 />
+
+                {dateError && (
+                  <div className="col-span-full text-red-500 text-sm font-medium mt-1">
+                    <AlertCircle className="inline-block w-4 h-4 mr-1 mb-0.5" />
+                    {dateError}
+                  </div>
+                )}
+
                 <div></div>
               </div>
 
@@ -1073,8 +1123,8 @@ const ReservationManagementSystem: React.FC = () => {
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={checkAvailability}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded flex items-center space-x-2"
-                  disabled={!selectedProperty || !sharedCheckInDate || !sharedCheckOutDate || roomSelection.length === 0}
+                  className={`bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded flex items-center space-x-2 ${(!selectedProperty || !sharedCheckInDate || !sharedCheckOutDate || roomSelection.length === 0 || !!dateError) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!selectedProperty || !sharedCheckInDate || !sharedCheckOutDate || roomSelection.length === 0 || !!dateError}
                 >
                   <Check size={16} />
                   <span>Check Availability</span>
@@ -1184,7 +1234,7 @@ const ReservationManagementSystem: React.FC = () => {
                   value={apartmentInfo.hostTariffType}
                   onChange={(e) => setApartmentInfo({ ...apartmentInfo, hostTariffType: e.target.value })}
                 >
-                  <option value="">Select Host Tariff Type</option>
+                  <option value="">Apartment Type</option>
                   <option value="Standard">Standard</option>
                   <option value="Premium">Premium</option>
                 </select>
@@ -1216,7 +1266,7 @@ const ReservationManagementSystem: React.FC = () => {
                   onChange={(e) => setApartmentInfo({ ...apartmentInfo, hostPaymentMethod: e.target.value })}
                 >
                   <option value="">Select Host Payment Method</option>
-                  <option value="Bill to company">Bill to company</option>
+                  <option value="Bill to Pajasa">Bill to Pajasa</option>
                   <option value="Direct payment">Direct payment</option>
                 </select>
 
@@ -1419,7 +1469,7 @@ const ReservationManagementSystem: React.FC = () => {
                   <option value="3">Triple</option>
                 </select>
               </div>
-              <div className="col-span-3">
+              <div className="col-span-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                 <input
                   type="text"
@@ -1427,6 +1477,26 @@ const ReservationManagementSystem: React.FC = () => {
                   className="w-full p-2 border border-gray-300 rounded"
                   value={newGuestEntry.address}
                   onChange={(e) => setNewGuestEntry({ ...newGuestEntry, address: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  placeholder="Guest Email"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={newGuestEntry.email || ''}
+                  onChange={(e) => setNewGuestEntry({ ...newGuestEntry, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                <input
+                  type="text"
+                  placeholder="Contact Number"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={newGuestEntry.contactNumber || ''}
+                  onChange={(e) => setNewGuestEntry({ ...newGuestEntry, contactNumber: e.target.value })}
                 />
               </div>
             </div>
@@ -1453,7 +1523,13 @@ const ReservationManagementSystem: React.FC = () => {
                       <td className="border border-gray-200 p-2">{guest.roomType}</td>
                       <td className="border border-gray-200 p-2">{guest.occupancy}</td>
                       <td className="border border-gray-200 p-2">{guest.address}</td>
-                      <td className="border border-gray-200 p-2 text-center">
+                      <td className="border border-gray-200 p-2 text-center flex justify-center space-x-2">
+                        <button
+                          onClick={() => handleEditGuestEntry(guest)}
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          Edit
+                        </button>
                         <button
                           onClick={() => handleDeleteGuestEntry(guest.id)}
                           className="text-red-500 hover:text-red-700"

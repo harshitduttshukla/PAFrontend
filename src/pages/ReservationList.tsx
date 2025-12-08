@@ -42,7 +42,8 @@ const ReservationList: React.FC = () => {
       // Prepare email data from reservation
       const emailData = {
         apartmentemail: booking.guest_email || '',
-        subject: 'Booking Confirmation',
+        subject: `Booking Confirmation – ${booking.guest_name || ''} – ${booking.reservation_no}`,
+        reservationNo: booking.reservation_no,
         apartmentname: booking.property_type || '',
         contactperson: booking.contact_person || '',
         contactnumber: booking.contact_person_number || '',
