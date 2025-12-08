@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
+import { z } from 'zod';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -28,9 +29,10 @@ interface ClientInputProps {
   value: string | number | undefined;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
+  error?: string;
 }
 
-const ClientInput = ({ label, name, type = "text", value, onChange, placeholder }: ClientInputProps) => (
+const ClientInput = ({ label, name, type = "text", value, onChange, placeholder, error }: ClientInputProps) => (
   <div className="flex flex-col">
     <label className="mb-1 text-sm font-medium text-gray-700">{label}</label>
     <input
@@ -39,10 +41,34 @@ const ClientInput = ({ label, name, type = "text", value, onChange, placeholder 
       value={value || ''}
       onChange={onChange}
       placeholder={placeholder}
-      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500' : 'border-gray-300'}`}
     />
+    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
   </div>
 );
+
+// Zod Schema
+const clientSchema = z.object({
+  clientName: z.string().min(1, "Client Name is required"),
+  emailAddress: z.string().email("Invalid email address").optional().or(z.literal('')),
+  phoneNumber: z.string().optional(),
+  mobileNumber: z.string().optional(),
+  active: z.boolean(),
+  // GST Validation: Exactly 15 chars, strict regex
+  gstNo: z.string()
+    .length(15, "GST Number must be exactly 15 characters")
+    .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST Number format (e.g., 22AAAAA0000A1Z5)")
+    .optional()
+    .or(z.literal('')),
+  streetAddress: z.string().optional(),
+  streetAddress2: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  faxNumber: z.string().optional(),
+  webAddress: z.string().optional(),
+});
+
 
 const ClientForm: React.FC = () => {
   const navigate = useNavigate();
@@ -50,6 +76,7 @@ const ClientForm: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<ClientFormData>({
     clientName: '',
@@ -96,6 +123,14 @@ const ClientForm: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    // Clear error for field on change
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -105,6 +140,24 @@ const ClientForm: React.FC = () => {
   const handleSave = async () => {
     setLoading(true);
     setMessage(null);
+    setErrors({});
+
+    // Zod Validation
+    const validationResult = clientSchema.safeParse(formData);
+
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      validationResult.error.issues.forEach(issue => {
+        if (issue.path[0]) {
+          fieldErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      setLoading(false);
+      // Optional: Show a general error message
+      setMessage({ type: 'error', text: 'Please fix the validation errors.' });
+      return;
+    }
 
     try {
       const url = isEditMode
@@ -223,8 +276,9 @@ const ClientForm: React.FC = () => {
                       value={formData.clientName}
                       onChange={handleInputChange}
                       placeholder="Client Name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.clientName ? 'border-red-500' : 'border-gray-300'}`}
                     />
+                    {errors.clientName && <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>}
                   </div>
                 </div>
               </div>
@@ -243,6 +297,7 @@ const ClientForm: React.FC = () => {
                   type="text"
                   value={formData.gstNo}
                   onChange={handleInputChange}
+                  error={errors.gstNo}
                 />
 
                 <ClientInput
@@ -251,6 +306,7 @@ const ClientForm: React.FC = () => {
                   type="text"
                   value={formData.streetAddress}
                   onChange={handleInputChange}
+                  error={errors.streetAddress}
                 />
 
                 <ClientInput
@@ -259,6 +315,7 @@ const ClientForm: React.FC = () => {
                   type="text"
                   value={formData.streetAddress2}
                   onChange={handleInputChange}
+                  error={errors.streetAddress2}
                 />
 
                 <ClientInput
@@ -267,6 +324,7 @@ const ClientForm: React.FC = () => {
                   type="text"
                   value={formData.city}
                   onChange={handleInputChange}
+                  error={errors.city}
                 />
 
                 <ClientInput
@@ -275,6 +333,7 @@ const ClientForm: React.FC = () => {
                   type="text"
                   value={formData.state}
                   onChange={handleInputChange}
+                  error={errors.state}
                 />
 
                 <ClientInput
@@ -283,6 +342,7 @@ const ClientForm: React.FC = () => {
                   type="text"
                   value={formData.zipCode}
                   onChange={handleInputChange}
+                  error={errors.zipCode}
                 />
               </div>
             </div>
@@ -297,6 +357,7 @@ const ClientForm: React.FC = () => {
                   type="tel"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
+                  error={errors.phoneNumber}
                 />
 
                 <ClientInput
@@ -305,6 +366,7 @@ const ClientForm: React.FC = () => {
                   type="tel"
                   value={formData.faxNumber}
                   onChange={handleInputChange}
+                  error={errors.faxNumber}
                 />
 
                 <ClientInput
@@ -313,6 +375,7 @@ const ClientForm: React.FC = () => {
                   type="tel"
                   value={formData.mobileNumber}
                   onChange={handleInputChange}
+                  error={errors.mobileNumber}
                 />
 
                 <ClientInput
@@ -321,6 +384,7 @@ const ClientForm: React.FC = () => {
                   type="email"
                   value={formData.emailAddress}
                   onChange={handleInputChange}
+                  error={errors.emailAddress}
                 />
 
                 <ClientInput
@@ -329,6 +393,7 @@ const ClientForm: React.FC = () => {
                   type="url"
                   value={formData.webAddress}
                   onChange={handleInputChange}
+                  error={errors.webAddress}
                 />
               </div>
             </div>

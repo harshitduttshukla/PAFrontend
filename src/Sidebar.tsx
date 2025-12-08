@@ -1,5 +1,6 @@
-import { NavLink } from "react-router-dom";
-import { X } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { X, LogOut } from "lucide-react";
+import { useAuth } from "./context/AuthContext";
 
 interface MenuItem {
   label: string;
@@ -26,6 +27,14 @@ interface SidebarProps {
 }
 
 function Sidebar({ isOpen = true, onClose }: SidebarProps) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <>
       <div className={`
@@ -63,6 +72,16 @@ function Sidebar({ isOpen = true, onClose }: SidebarProps) {
               {item.label}
             </NavLink>
           ))}
+        </div>
+
+        <div className="absolute bottom-4 left-4 right-4">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center px-4 py-2 rounded-lg text-lg font-medium text-red-600 hover:bg-red-50 transition-all duration-200 border border-red-100"
+          >
+            <LogOut size={20} className="mr-2" />
+            Logout
+          </button>
         </div>
       </div>
 
