@@ -48,4 +48,8 @@ export interface Reservation {
   state: string;
   zip_code: string;
   updated_at: string;
+  apartment_type:string;
+  host_payment_mode:string;
+  host_email:string;
+
 }

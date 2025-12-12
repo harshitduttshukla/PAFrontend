@@ -13,6 +13,8 @@ const BookingHistoryModal: React.FC<BookingHistoryModalProps> = ({ isOpen, onClo
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [expandedVersion, setExpandedVersion] = useState<number | null>(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  console.log("Bokking ", booking);
+
 
   useEffect(() => {
     if (isOpen && booking) {
@@ -65,9 +67,11 @@ const BookingHistoryModal: React.FC<BookingHistoryModalProps> = ({ isOpen, onClo
     { label: 'Taxes', value: `${booking.taxes}%`, highlight: true },
     { label: 'Total Tariff', value: `₹${booking.total_tariff}`, highlight: true },
     { label: 'Room Type', value: booking.room_type, highlight: true },
-    { label: 'Payment Mode', value: booking.payment_mode || 'N/A', highlight: true },
-    { label: 'Tariff Type', value: booking.tariff_type || 'N/A', highlight: true },
+    { label: 'Payment Mode of Guest', value: booking.payment_mode || 'N/A', highlight: true },
+    { label: 'Tariff Type of Guest', value: booking.tariff_type || 'N/A', highlight: true },
     { label: 'Occupancy', value: booking.occupancy?.toString() },
+    { label: 'Apartment Type', value: booking.apartment_type, highlight: true },
+    { label: 'Host Payment Mode', value: booking.host_payment_mode, highlight: true },
     { label: 'Property Type', value: booking.property_type, highlight: true },
     { label: 'City', value: booking.city },
     { label: 'Location', value: booking.location },

@@ -5,8 +5,9 @@ import { ChevronDown, ChevronRight, Save, X, Check, AlertCircle, Search } from '
 interface Client {
   id: string;
   client_name: string;
-  email?: string;
+  email_address?: string;
   phone?: string;
+  email?: string
 }
 
 
@@ -335,6 +336,8 @@ const ReservationManagementSystem: React.FC = () => {
           adminEmail: data.admin_email || ''
         });
 
+        console.log("fgjdfksg", data.property_url);
+
         // Set Apartment Info
         setApartmentInfo({
           hostName: data.host_name || '',
@@ -347,8 +350,8 @@ const ReservationManagementSystem: React.FC = () => {
           hostTotalAmount: data.host_total_amount || '',
           contactPerson: data.contact_person || '',
           contactNumber: data.contact_person_number || '',
-          hostTariffType: data.host_tariff_type || '',
-          hostPaymentMethod: data.host_payment_method || '',
+          hostTariffType: data.apartment_type || '',
+          hostPaymentMethod: data.host_payment_mode || '',
           chargeableDays: data.chargeable_days || ''
         });
 
@@ -564,7 +567,20 @@ const ReservationManagementSystem: React.FC = () => {
     setSelectedClient(client);
     setClientSearchTerm(client.client_name);
     setShowClientDropdown(false);
-    setGuestInfo(prev => ({ ...prev, companyName: client.client_name }));
+
+    // Auto-populate guest email with Mandatory emails
+    let emailString = '';
+    if (client.email_address) {
+      emailString = `${client.email_address}, ps@pajasaapartments.com, accounts@pajasaapartments.com`;
+    } else {
+      emailString = 'ps@pajasaapartments.com, accounts@pajasaapartments.com';
+    }
+
+    setGuestInfo(prev => ({
+      ...prev,
+      companyName: client.client_name,
+      guestEmail: emailString
+    }));
   };
 
   // Handle property selection
@@ -795,12 +811,17 @@ const ReservationManagementSystem: React.FC = () => {
     }
   };
 
-  const handleAddGuestEntry = () => {
+  const handleAddGuestEntry = async () => {
     if (!newGuestEntry.guestName || !newGuestEntry.cid || !newGuestEntry.cod) {
       alert('Please fill in at least Guest Name, Check-in, and Check-out dates');
       return;
     }
-    setAdditionalGuests([...additionalGuests, { ...newGuestEntry, id: Date.now().toString() }]);
+
+    const newGuestWithId = { ...newGuestEntry, id: Date.now().toString() };
+    const updatedGuests = [...additionalGuests, newGuestWithId];
+
+    // Update local state
+    setAdditionalGuests(updatedGuests);
     setNewGuestEntry({
       id: '',
       guestName: '',
@@ -812,6 +833,41 @@ const ReservationManagementSystem: React.FC = () => {
       email: '',
       contactNumber: ''
     });
+
+    // If in Edit Mode, auto-save to backend to trigger versioning
+    if (isEditMode && reservationId && selectedClient && selectedProperty) {
+      try {
+        const reservationData = {
+          clientId: selectedClient.id,
+          propertyId: selectedProperty.property_id,
+          guestInfo,
+          apartmentInfo,
+          pajasaInfo,
+          roomSelection,
+          additionalGuests: updatedGuests, // Use the new list
+          createdAt: new Date().toISOString()
+        };
+
+        const response = await fetch(`${API_BASE_URL}api/updateReservation`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ...reservationData, id: reservationId })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          console.log('Auto-saved new guest entry to backend');
+          alert('Guest added and reservation updated successfully!');
+        } else {
+          console.error('Failed to auto-save guest:', result.message);
+          alert('Guest added locally, but failed to save to server. Please click Update Reservation manually.');
+        }
+      } catch (error) {
+        console.error('Error auto-saving guest:', error);
+      }
+    }
   };
 
   const handleDeleteGuestEntry = (id: string) => {
@@ -966,7 +1022,7 @@ const ReservationManagementSystem: React.FC = () => {
                 >
                   <option value="">Select Mode Of Payment</option>
                   <option value="Direct Payment">Direct Payment</option>
-                  <option value="BTC">BTC</option>
+                  <option value="Bill to Company">BTC</option>
                 </select>
                 <select
                   className="p-2 border border-gray-300 rounded"
