@@ -650,8 +650,71 @@ const ReservationManagementSystem: React.FC = () => {
     setActiveSection(activeSection === section ? '' : section);
   };
 
+  // Validation State
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10,12}$/;
+
+    if (!selectedClient) newErrors.client = "Client selection is required";
+    if (!selectedProperty) newErrors.property = "Property selection is required";
+
+    // Guest Info Validation
+    if (!guestInfo.companyName.trim()) newErrors.companyName = "Company Name is required";
+    if (!guestInfo.paymentMode) newErrors.paymentMode = "Payment Mode is required";
+    if (!guestInfo.tariffType) newErrors.tariffType = "Tariff Type is required";
+
+    if (!guestInfo.guestName.trim()) newErrors.guestName = "Guest Name is required";
+
+    if (!guestInfo.guestEmail.trim()) {
+      newErrors.guestEmail = "Guest Email is required";
+    }
+    // basic check for multiple emails
+    // else {
+    //   const emails = guestInfo.guestEmail.split(',').map(e => e.trim());
+    //   const invalidEmails = emails.filter(e => !emailRegex.test(e));
+    //   if (invalidEmails.length > 0) newErrors.guestEmail = `Invalid email(s): ${invalidEmails.join(', ')}`;
+    // }
+
+    if (!guestInfo.contactNumber.trim()) {
+      newErrors.contactNumber = "Contact Number is required";
+    }
+    // else if (!phoneRegex.test(guestInfo.contactNumber.replace(/\D/g,''))) {
+    //     newErrors.contactNumber = "Invalid contact number format";
+    // }
+
+    if (!guestInfo.occupancy) newErrors.occupancy = "Occupancy is required";
+
+    if (!sharedCheckInDate) newErrors.checkInDate = "Check-in Date is required";
+    if (!sharedCheckOutDate) newErrors.checkOutDate = "Check-out Date is required";
+
+    if (roomSelection.length === 0) newErrors.roomSelection = "At least one room must be selected";
+
+    // Apartment Info Validation
+    if (!apartmentInfo.hostName.trim()) newErrors.hostName = "Host Name is required";
+    // if (!apartmentInfo.hostEmail.trim()) newErrors.hostEmail = "Host Email is required";
+    if (!apartmentInfo.hostPaymentMethod) newErrors.hostPaymentMethod = "Host Payment Method is required";
+    if (!apartmentInfo.hostTariffType) newErrors.hostTariffType = "Host Tariff Type is required";
+
+    setErrors(newErrors);
+
+    // Auto clear errors after 5 seconds
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => setErrors({}), 5000);
+    }
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   // Handle form submission
   const handleSave = async () => {
+    if (!validateForm()) {
+      alert("Please fix the validation errors before saving.");
+      return;
+    }
+
     if (!selectedClient) {
       alert('Please select a client');
       return;
@@ -988,9 +1051,10 @@ const ReservationManagementSystem: React.FC = () => {
             </div>
 
             <div>
-              <select className="w-full p-2 border border-gray-300 rounded">
+              <select className={`w-full p-2 border rounded ${errors.client ? 'border-red-500' : 'border-gray-300'}`}>
                 <option value="">Select Third Option</option>
               </select>
+              {errors.client && <span className="text-red-500 text-xs mt-1">{errors.client}</span>}
             </div>
           </div>
         </div>
@@ -1011,12 +1075,13 @@ const ReservationManagementSystem: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Enter company Name"
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.companyName ? 'border-red-500' : 'border-gray-300'}`}
                   value={guestInfo.companyName}
                   onChange={(e) => setGuestInfo({ ...guestInfo, companyName: e.target.value })}
                 />
+                {errors.companyName && <span className="text-red-500 text-xs col-span-full md:col-span-1">{errors.companyName}</span>}
                 <select
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.paymentMode ? 'border-red-500' : 'border-gray-300'}`}
                   value={guestInfo.paymentMode}
                   onChange={(e) => setGuestInfo({ ...guestInfo, paymentMode: e.target.value })}
                 >
@@ -1024,8 +1089,9 @@ const ReservationManagementSystem: React.FC = () => {
                   <option value="Direct Payment">Direct Payment</option>
                   <option value="Bill to Company">BTC</option>
                 </select>
+                {errors.paymentMode && <span className="text-red-500 text-xs col-span-full md:col-span-1">{errors.paymentMode}</span>}
                 <select
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.tariffType ? 'border-red-500' : 'border-gray-300'}`}
                   value={guestInfo.tariffType}
                   onChange={(e) => setGuestInfo({ ...guestInfo, tariffType: e.target.value })}
                 >
@@ -1033,6 +1099,7 @@ const ReservationManagementSystem: React.FC = () => {
                   <option value="As Per Contract">As Per Contract</option>
                   <option value="As Per Email">As Per Email</option>
                 </select>
+                {errors.tariffType && <span className="text-red-500 text-xs col-span-full md:col-span-1">{errors.tariffType}</span>}
                 <input
                   type="email"
                   placeholder="Select Guest Email From Ticket"
@@ -1044,10 +1111,11 @@ const ReservationManagementSystem: React.FC = () => {
                 <input
                   type="date"
                   placeholder="Check In Date"
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.checkInDate ? 'border-red-500' : 'border-gray-300'}`}
                   value={sharedCheckInDate}
                   onChange={(e) => setSharedCheckInDate(e.target.value)}
                 />
+                {errors.checkInDate && <span className="text-red-500 text-xs">{errors.checkInDate}</span>}
                 <input
                   type="time"
                   className="p-2 border border-gray-300 rounded"
@@ -1057,10 +1125,11 @@ const ReservationManagementSystem: React.FC = () => {
                 <input
                   type="date"
                   placeholder="Check Out Date"
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.checkOutDate ? 'border-red-500' : 'border-gray-300'}`}
                   value={sharedCheckOutDate}
                   onChange={(e) => setSharedCheckOutDate(e.target.value)}
                 />
+                {errors.checkOutDate && <span className="text-red-500 text-xs">{errors.checkOutDate}</span>}
                 <input
                   type="time"
                   className="p-2 border border-gray-300 rounded"
@@ -1071,19 +1140,21 @@ const ReservationManagementSystem: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Guest Name"
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.guestName ? 'border-red-500' : 'border-gray-300'}`}
                   value={guestInfo.guestName}
                   onChange={(e) => setGuestInfo({ ...guestInfo, guestName: e.target.value })}
                 />
+                {errors.guestName && <span className="text-red-500 text-xs">{errors.guestName}</span>}
                 <input
                   type="text"
                   placeholder="Guest Contact Number"
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`}
                   value={guestInfo.contactNumber}
                   onChange={(e) => setGuestInfo({ ...guestInfo, contactNumber: e.target.value })}
                 />
+                {errors.contactNumber && <span className="text-red-500 text-xs">{errors.contactNumber}</span>}
                 <select
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.occupancy ? 'border-red-500' : 'border-gray-300'}`}
                   value={guestInfo.occupancy}
                   onChange={(e) => setGuestInfo({ ...guestInfo, occupancy: e.target.value })}
                 >
@@ -1092,6 +1163,7 @@ const ReservationManagementSystem: React.FC = () => {
                   <option value="2">Double</option>
                   <option value="3">Triple</option>
                 </select>
+                {errors.occupancy && <span className="text-red-500 text-xs">{errors.occupancy}</span>}
                 <input
                   type="text"
                   placeholder="Chargeable Days"
@@ -1136,10 +1208,11 @@ const ReservationManagementSystem: React.FC = () => {
                 <input
                   type="email"
                   placeholder="Guest Email"
-                  className="w-full p-2 border border-gray-300 rounded"
+                  className={`w-full p-2 border rounded ${errors.guestEmail ? 'border-red-500' : 'border-gray-300'}`}
                   value={guestInfo.guestEmail}
                   onChange={(e) => setGuestInfo({ ...guestInfo, guestEmail: e.target.value })}
                 />
+                {errors.guestEmail && <span className="text-red-500 text-xs">{errors.guestEmail}</span>}
               </div>
 
               {/* Room Selection */}
@@ -1267,10 +1340,11 @@ const ReservationManagementSystem: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Host Name"
-                  className="p-2 border border-gray-300 rounded bg-gray-100"
+                  className={`p-2 border rounded bg-gray-100 ${errors.hostName ? 'border-red-500' : 'border-gray-300'}`}
                   value={apartmentInfo.hostName}
                   onChange={(e) => setApartmentInfo({ ...apartmentInfo, hostName: e.target.value })}
                 />
+                {errors.hostName && <span className="text-red-500 text-xs">{errors.hostName}</span>}
                 <input
                   type="text"
                   placeholder="Property Address"
@@ -1286,7 +1360,7 @@ const ReservationManagementSystem: React.FC = () => {
                   onChange={(e) => setApartmentInfo({ ...apartmentInfo, hostEmail: e.target.value })}
                 />
                 <select
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.hostTariffType ? 'border-red-500' : 'border-gray-300'}`}
                   value={apartmentInfo.hostTariffType}
                   onChange={(e) => setApartmentInfo({ ...apartmentInfo, hostTariffType: e.target.value })}
                 >
@@ -1294,6 +1368,7 @@ const ReservationManagementSystem: React.FC = () => {
                   <option value="Standard">Standard</option>
                   <option value="Premium">Premium</option>
                 </select>
+                {errors.hostTariffType && <span className="text-red-500 text-xs col-span-full md:col-span-1">{errors.hostTariffType}</span>}
 
                 <input
                   type="text"
@@ -1317,7 +1392,7 @@ const ReservationManagementSystem: React.FC = () => {
                   readOnly
                 />
                 <select
-                  className="p-2 border border-gray-300 rounded"
+                  className={`p-2 border rounded ${errors.hostPaymentMethod ? 'border-red-500' : 'border-gray-300'}`}
                   value={apartmentInfo.hostPaymentMethod}
                   onChange={(e) => setApartmentInfo({ ...apartmentInfo, hostPaymentMethod: e.target.value })}
                 >
@@ -1325,6 +1400,7 @@ const ReservationManagementSystem: React.FC = () => {
                   <option value="Bill to Pajasa">Bill to Pajasa</option>
                   <option value="Direct payment">Direct payment</option>
                 </select>
+                {errors.hostPaymentMethod && <span className="text-red-500 text-xs col-span-full md:col-span-1">{errors.hostPaymentMethod}</span>}
 
                 <input
                   type="text"

@@ -38,7 +38,7 @@ function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   return (
     <>
       <div className={`
-        bg-white h-screen w-64 p-4 shadow-lg overflow-y-auto fixed top-0 left-0 z-50 transition-transform duration-300 ease-in-out
+        bg-white h-screen w-64 p-4 shadow-lg fixed top-0 left-0 z-50 transition-transform duration-300 ease-in-out flex flex-col
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 lg:w-52
       `}>
@@ -52,7 +52,7 @@ function Sidebar({ isOpen = true, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1 overflow-y-auto">
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
@@ -74,7 +74,7 @@ function Sidebar({ isOpen = true, onClose }: SidebarProps) {
           ))}
         </div>
 
-        <div className="absolute bottom-4 left-4 right-4">
+        <div className="mt-4">
           <button
             onClick={handleLogout}
             className="w-full flex items-center px-4 py-2 rounded-lg text-lg font-medium text-red-600 hover:bg-red-50 transition-all duration-200 border border-red-100"

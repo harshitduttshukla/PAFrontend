@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, History, ChevronRight, ChevronDown } from "lucide-react";
+import { X, History, ChevronRight, ChevronDown, Eye } from "lucide-react";
 import { Reservation } from "../../types/Reservation";
 
 interface BookingHistoryModalProps {
@@ -145,59 +145,100 @@ const BookingHistoryModal: React.FC<BookingHistoryModalProps> = ({ isOpen, onClo
                 No previous versions found.
               </div>
             ) : (
-              <div className="space-y-4">
-                {history.map((version, index) => {
-                  const data = version.snapshot_data;
-                  // Helper to parse if data is string (double serialization check)
-                  const snapshot = typeof data === 'string' ? JSON.parse(data) : data;
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[900px]">
+                  <thead>
+                    <tr className="bg-gray-100 text-gray-700 font-semibold text-sm">
+                      <th className="p-3 border-b whitespace-nowrap">Guest Name</th>
+                      <th className="p-3 border-b whitespace-nowrap">C.I.D</th>
+                      <th className="p-3 border-b whitespace-nowrap">C.O.D</th>
+                      <th className="p-3 border-b whitespace-nowrap">Room Type</th>
+                      <th className="p-3 border-b whitespace-nowrap">Occupancy</th>
+                      <th className="p-3 border-b whitespace-nowrap">Address</th>
+                      <th className="p-3 border-b whitespace-nowrap">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((version, index) => {
+                      const data = version.snapshot_data;
+                      const snapshot = typeof data === 'string' ? JSON.parse(data) : data;
+                      const address = [snapshot.address1, snapshot.address2, snapshot.address3]
+                        .filter(Boolean)
+                        .join(", ");
 
-                  return (
-                    <div key={version.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                      <div
-                        className="bg-gray-50 px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
-                        onClick={() => toggleVersion(index)}
-                      >
-                        <div className="flex items-center space-x-4">
-                          {expandedVersion === index ? <ChevronDown size={20} className="text-gray-500" /> : <ChevronRight size={20} className="text-gray-500" />}
-                          <div>
-                            <p className="font-medium text-gray-800">Version {history.length - index}</p>
-                            <p className="text-sm text-gray-500">{new Date(version.change_date).toLocaleString()}</p>
-                          </div>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {snapshot.guest_name} • {snapshot.reservation_no}
-                        </div>
-                      </div>
+                      return (
+                        <React.Fragment key={version.id}>
+                          <tr className="border-b hover:bg-gray-50 text-sm transition-colors">
+                            <td className="p-3 font-medium text-gray-900">{snapshot.guest_name}</td>
+                            <td className="p-3 text-gray-600">{formatDate(snapshot.check_in_date)}</td>
+                            <td className="p-3 text-gray-600">{formatDate(snapshot.check_out_date)}</td>
+                            <td className="p-3 text-gray-600">{snapshot.room_type}</td>
+                            <td className="p-3 text-gray-600">{snapshot.occupancy}</td>
+                            <td className="p-3 text-gray-600 max-w-[250px] truncate" title={address}>
+                              {address || "-"}
+                            </td>
+                            <td className="p-3">
+                              <button
+                                onClick={() => toggleVersion(index)}
+                                className="text-blue-600 hover:text-blue-800 font-medium text-xs flex items-center bg-blue-50 px-3 py-1 rounded transition-colors"
+                              >
+                                {expandedVersion === index ? (
+                                  <>Close <X size={14} className="ml-1" /></>
+                                ) : (
+                                  <>View <Eye size={14} className="ml-1" /></>
+                                )}
+                              </button>
+                            </td>
+                          </tr>
 
-                      {expandedVersion === index && (
-                        <div className="p-4 bg-white border-t border-gray-200">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {[
-                              { l: 'Guest Name', v: snapshot.guest_name },
-                              { l: 'Check In', v: formatDate(snapshot.check_in_date) },
-                              { l: 'Check Out', v: formatDate(snapshot.check_out_date) },
-                              { l: 'Total Tariff', v: `₹${snapshot.total_tariff}` },
-                              { l: 'Occupancy', v: snapshot.occupancy },
-                              { l: 'Room Type', v: snapshot.room_type },
-                              { l: 'Status', v: snapshot.status },
-                            ].map((item, i) => (
-                              <div key={i}>
-                                <p className="text-xs text-gray-500 uppercase">{item.l}</p>
-                                <p className="font-medium text-gray-800">{item.v}</p>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-4 pt-4 border-t border-gray-100">
-                            <h4 className="text-sm font-semibold text-gray-600 mb-2">Full Snapshot Data (Debug)</h4>
-                            <pre className="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-auto max-h-40">
-                              {JSON.stringify(snapshot, null, 2)}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                          {expandedVersion === index && (
+                            <tr>
+                              <td colSpan={7} className="p-0 border-b bg-gray-50">
+                                <div className="p-4 border-l-4 border-blue-500 rounded-r-lg m-2 bg-white shadow-sm">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                    {[
+                                      { l: "Guest Name", v: snapshot.guest_name },
+                                      { l: "Reservation No", v: snapshot.reservation_no },
+                                      { l: "Check In", v: formatDate(snapshot.check_in_date) },
+                                      { l: "Check Out", v: formatDate(snapshot.check_out_date) },
+                                      { l: "Total Tariff", v: `₹${snapshot.total_tariff}` },
+                                      { l: "Occupancy", v: snapshot.occupancy },
+                                      { l: "Room Type", v: snapshot.room_type },
+                                      { l: "Property Type", v: snapshot.property_type },
+                                      { l: "Status", v: snapshot.status },
+                                      { l: "Client", v: snapshot.client_name },
+                                      { l: "Contact", v: snapshot.contact_number },
+                                      { l: "Email", v: snapshot.guest_email },
+                                      { l: "Formatted", v: snapshot.formatted },
+                                      { l: "Chargeable Days", v: snapshot.chargeable_days },
+                                      { l: "Base Rate", v: snapshot.base_rate },
+                                      { l: "Taxes", v: snapshot.taxes },
+                                    ].map((item, i) => (
+                                      <div key={i}>
+                                        <p className="text-xs text-gray-500 uppercase font-semibold">{item.l}</p>
+                                        <p className="font-medium text-gray-800">{item.v || "-"}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <h4 className="text-xs font-semibold text-gray-500 uppercase">Version Meta</h4>
+                                      <span className="text-xs text-gray-400">ID: {version.id}</span>
+                                    </div>
+                                    <div className="flex space-x-6 text-sm text-gray-600">
+                                      <p>Changed At: <span className="font-medium">{new Date(version.change_date).toLocaleString()}</span></p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
