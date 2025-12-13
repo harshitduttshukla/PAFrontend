@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, History, ChevronRight, ChevronDown, Eye } from "lucide-react";
+import { X, History, Eye } from "lucide-react";
 import { Reservation } from "../../types/Reservation";
 
 interface BookingHistoryModalProps {

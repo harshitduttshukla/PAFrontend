@@ -655,8 +655,7 @@ const ReservationManagementSystem: React.FC = () => {
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\d{10,12}$/;
+    
 
     if (!selectedClient) newErrors.client = "Client selection is required";
     if (!selectedProperty) newErrors.property = "Property selection is required";
